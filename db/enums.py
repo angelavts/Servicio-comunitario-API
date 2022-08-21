@@ -1,8 +1,9 @@
-from strenum import StrEnum
+from sqlalchemy import Enum
+from sqlalchemy.dialects.postgresql import ENUM
 
 
-class Status(StrEnum):
-    PENDING = 'Pendiente',    # notice the trailing comma
-    IN_PROGRESS = 'En progreso', 
-    COMPLETED = 'Completada',
-    INACTIVE = 'Inactiva'
+status_enum = ('Pendiente','En progreso', 'Completada', 'Inactiva')
+status_enum = ENUM(*status_enum, name='status_enum')
+
+role_enum = ('Coordinador','Estudiante', 'Tutor')
+role_enum = ENUM(*role_enum, name='role_enum')

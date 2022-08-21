@@ -1,6 +1,6 @@
 from datetime import datetime
 from db.session import Base
-from db.enums import Status
+from db.enums import status_enum
 from sqlalchemy import String, Boolean, Integer, Column, Text, DateTime, UniqueConstraint
 
 
@@ -15,7 +15,7 @@ class Task(Base):
     cost = Column(Integer(), nullable=False)
     date_start = Column(DateTime(), default=datetime.now())
     date_end = Column(DateTime(), nullable=True)
-    status = Column(String(20), nullable=False, default=Status.PENDING)
+    status = Column(status_enum, nullable=False, default='Pendiente')
     student_id = Column(Integer(), nullable=False)
     project_id = Column(Integer(), nullable=False)
     tutor_id = Column(Integer(), nullable=False)

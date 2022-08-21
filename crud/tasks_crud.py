@@ -5,7 +5,7 @@ from fastapi import status, HTTPException
 from typing import List
 
 
-def create(task: Task, db: Session, status_code=status.HTTP_201_CREATED):
+def create(task: Task, db: Session):
     """
     Crea una tarea 
     """

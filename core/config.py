@@ -21,8 +21,11 @@ class Settings(BaseSettings):
     ROOT_DIR: str = path.dirname(path.abspath('main.py'))
     UPLOAD_FOLDER: str = "uploads"
     UPLOAD_PATH: str = uploads.UPLOAD_PATH
-
-    TASK_FILE_FORMAT = ['Nombre', 'Descripcion', 'Horas', 'Estudiante', 'Proyecto', 'Tutor']
+    # formatos de entrada de archivos excel
+    TASK_FILE_FORMAT = ['Nombre', 'Descripción', 'Horas', 'Estudiante', 'Proyecto', 'Tutor']
+    STUDENTS_FILE_FORMAT = ['Cédula', 'Nombre', 'Apellido', 'Carrera']
+    PROJECTS_FILE_FORMAT = ['Nombre', 'Descripción', 'Fecha inicio', 'Carrera', 'Nombre coordinador',
+                            'Apellido coordinador', 'Cédula coordinador', 'Carrera coordinador']
 
 
 settings = Settings()

@@ -4,6 +4,7 @@ from db.session import engine, Base
 from core.config import settings
 from api.tasks_router import tasks_router
 from api.api_router import api_router
+from api.users_router import users_router
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -21,6 +22,7 @@ def start_application():
     _api = FastAPI(title=settings.PROJECT_TITLE)
     _api.include_router(api_router, prefix='/api', tags=['api'])
     _api.include_router(tasks_router, prefix='/tasks', tags=['tasks'])
+    _api.include_router(users_router, prefix='/users', tags=['users'])
     
     create_and_populate_db()
     return CORSMiddleware(_api)
