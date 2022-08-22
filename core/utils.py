@@ -76,6 +76,30 @@ def is_valid_identication(identification: str):
         if id_parts[1].replace('.', '').isdigit():
             is_valid = True
     return is_valid
+
+
+
+def validate_and_convert_identication(identification: str):
+    """
+        Verifica que una cédula tenga el siguiente formato: V-0000000 o E-0000000
+    """
+    # quitar puntos, si los tiene
+    new_identification = identification.replace('.', '').replace(' ', '').upper()  
+    return_identification = None
+    if len(new_identification) > 1:
+        # Verificar que inicie con 'V' o 'E'
+        if new_identification[0] == 'V' or  new_identification[0] == 'E':
+            # Verificar que tenga '-' y continúe con una cadena de digitos
+            if new_identification[1] == '-' and len(new_identification) > 2 and new_identification[2:].isdigit():
+                return_identification = new_identification
+            # No tiene '-', verificar que siga una cadena de números
+            elif new_identification[1:].isdigit():
+                # Agregar el '-'
+                return_identification = new_identification[0] + '-' + new_identification[1:]
+    return return_identification
+
+
+   
         
 
 

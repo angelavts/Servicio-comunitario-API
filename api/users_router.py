@@ -8,6 +8,7 @@ from db.db import get_db
 from sqlalchemy.orm import Session
 from core import utils
 from core.config import settings
+from core import responses
 
 
 CORRECT_COLUMNS = settings.STUDENTS_FILE_FORMAT
@@ -19,13 +20,13 @@ users_router = APIRouter()
 
 
 # crear tarea
-@users_router.post('/', response_model=User, tags=['users'])
+@users_router.post('/create_student', tags=['users'])
 def create_users(user: User, db: Session = Depends(get_db)):
     """
     create a student
     """
     user = crud.users.create_student(user, db)
-    return user
+    return responses.USER_CREATED_SUCCESS
 
 @users_router.get('/user/{identification}', tags=['users'])
 def list_users(identification: str, db: Session = Depends(get_db)):

@@ -6,15 +6,18 @@ from api.tasks_router import tasks_router
 from api.api_router import api_router
 from api.users_router import users_router
 from fastapi.middleware.cors import CORSMiddleware
+from db.populate_db import populate_static_db
 
 
 
 def create_tables():
     # puede incluir condiciones en caso de que una tabla ya esté creada
+    Base.metadata.drop_all(engine) # PARA PRUEBAS
     Base.metadata.create_all(engine)
 
 def create_and_populate_db():
     create_tables()
+    populate_static_db()
     # create_tasks()
 
 def start_application():
