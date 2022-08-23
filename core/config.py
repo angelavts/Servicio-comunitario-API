@@ -22,10 +22,10 @@ class Settings(BaseSettings):
     UPLOAD_FOLDER: str = "uploads"
     UPLOAD_PATH: str = uploads.UPLOAD_PATH
     # formatos de entrada de archivos excel
-    TASK_FILE_FORMAT = ['Nombre', 'Descripción', 'Horas', 'Estudiante', 'Proyecto', 'Tutor']
-    STUDENTS_FILE_FORMAT = ['Cédula', 'Nombre', 'Apellido', 'Carrera']
-    PROJECTS_FILE_FORMAT = ['Nombre', 'Descripción', 'Fecha inicio', 'Carrera', 'Nombre coordinador',
-                            'Apellido coordinador', 'Cédula coordinador', 'Carrera coordinador']
+    TASK_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'HORAS', 'ESTUDIANTE', 'PROYECTO', 'TUTOR']
+    USERS_FILE_FORMAT = ['CÉDULA', 'NOMBRE', 'APELLIDO', 'CARRERA']
+    PROJECTS_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'FECHA INICIO', 'CARRERA', 'NOMBRE COORDINADOR',
+                            'APELLLIDO COORDINADOR', 'CÉDULA COORDINADOR', 'CARRERA COORDINADOR']
 
 
 settings = Settings()

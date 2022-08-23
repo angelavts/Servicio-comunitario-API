@@ -3,6 +3,7 @@ import pandas as pd
 from pydantic import BaseModel
 from os import path, getcwd
 from core.config import settings 
+from core.messages import messages
 from fastapi import HTTPException, File
 from typing import Callable
 
@@ -28,12 +29,14 @@ def get_schema_list_from_file(file_path: str, row_to_schema: Callable, correct_c
     """
     # To open Workbook
     df = pd.read_excel(file_path)
+    # poner todos los elementos de la columna en mayusculas
+    df.columns = list(map(normalize, df.columns))
     #  revisar si las columnas tienen el formato correcto
     if not is_correct_header(df.columns, correct_columns):
-        raise HTTPException(status_code=400, detail="Invalid table format")
+        raise HTTPException(status_code=400, detail=messages['invalid_document_format'])
     else:
         schema_list = []
-        df = df.to_numpy().tolist()
+        df = df[correct_columns].to_numpy().tolist()
         for i in range(len(df)):
             schema_list.append(row_to_schema(df[i]))
     return schema_list
@@ -41,22 +44,20 @@ def get_schema_list_from_file(file_path: str, row_to_schema: Callable, correct_c
     
 def is_correct_header(current_columns: list, correct_columns:list):
     """
-        Verifica que dos listas tengan los mismos nombres de columnas
+        Verifica que los items de la lista correcta existan dentro de la lista dada
     """
-    is_correct = False
-    if len(current_columns) == len(correct_columns):
-        is_correct = True
-        for i in range(len(current_columns)):
-            if normalize(current_columns[i]) != normalize(correct_columns[i]):
-                is_correct = False
-                break
+    is_correct = True
+    for column in correct_columns:
+        if column not in current_columns:
+            is_correct = False
+            break
     return is_correct
 
 def normalize(word: str):
     """
-        Convierte todos los caracteres de una cadena en minúsculas y quita los espacios
+        Convierte todos los caracteres de una cadena en mayúsculas y quita los espacios
     """
-    return word.lower().strip()
+    return word.upper().strip()
 
 def remove_accent_marks(word: str):
     """
@@ -71,10 +72,11 @@ def is_valid_identication(identification: str):
         Verifica que una cédula tenga el siguiente formato: V-0000000 o E-0000000
     """
     is_valid = False
-    id_parts = identification.split('-')
-    if id_parts[0].upper() == 'V' or id_parts[0].upper() == 'E':
-        if id_parts[1].replace('.', '').isdigit():
-            is_valid = True
+    if len(identification) > 1:       
+        id_parts = identification.split('-')
+        if id_parts[0].upper() == 'V' or id_parts[0].upper() == 'E':
+            if id_parts[1].replace('.', '').isdigit():
+                is_valid = True
     return is_valid
 
 
