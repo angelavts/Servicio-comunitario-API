@@ -18,7 +18,7 @@ from typing import List
 
 users_router = APIRouter()
 
-@users_router.post('/create_student', tags=['users'])
+@users_router.post('/create_student')
 def create_student(user: User, db: Session = Depends(get_db)):
     """
     create a student
@@ -28,7 +28,7 @@ def create_student(user: User, db: Session = Depends(get_db)):
 
 
 
-@users_router.post('/create_students', tags=['users'])
+@users_router.post('/create_students')
 def create_students(users: List[User], db: Session = Depends(get_db)):
     """
     create students from list
@@ -37,7 +37,7 @@ def create_students(users: List[User], db: Session = Depends(get_db)):
     return response
 
 
-@users_router.post('/create_tutor', tags=['users'])
+@users_router.post('/create_tutor')
 def create_tutor(user: User, db: Session = Depends(get_db)):
     """
     create a tutor
@@ -46,7 +46,7 @@ def create_tutor(user: User, db: Session = Depends(get_db)):
     return responses.USER_CREATED_SUCCESS
 
 
-@users_router.post('/create_tutors', tags=['users'])
+@users_router.post('/create_tutors')
 def create_tutors(user: User, db: Session = Depends(get_db)):
     """
     create tutors from list
@@ -55,7 +55,7 @@ def create_tutors(user: User, db: Session = Depends(get_db)):
     return response
 
 
-@users_router.get('/{identification}', tags=['users'])
+@users_router.get('/user/{identification}')
 def get_user(identification: str, db: Session = Depends(get_db)):
     """
     get user by identification
@@ -63,6 +63,32 @@ def get_user(identification: str, db: Session = Depends(get_db)):
     user = crud.users.get_user(identification, db)
     return user
 
+
+@users_router.get('/students')
+def get_students(db: Session = Depends(get_db)):
+    """
+    get students
+    """
+    users = crud.users.get_users('Estudiante', db)
+    return users
+
+
+@users_router.get('/students/{status}')
+def get_students_by_status(status: str, db: Session = Depends(get_db)):
+    """
+    get students by status
+    """
+    users = crud.users.get_users_by_status('Estudiante', status, db)
+    return users
+
+
+@users_router.get('/tutors')
+def get_tutors(db: Session = Depends(get_db)):
+    """
+    get a list of tutors
+    """
+    users = crud.users.get_users('Tutor', db)
+    return users
 
 
 @users_router.post('/create_students_from_file')
