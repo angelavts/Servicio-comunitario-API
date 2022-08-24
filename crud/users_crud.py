@@ -27,6 +27,45 @@ def create_user(user: User, role: str, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return new_user
 
+def update_user(user: User, identification: str, db: Session):
+    """
+    Crea un usuario 
+    """
+    db_user = db.query(models.User).filter(models.User.identification == user.identification).first()
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages['user_not_exists'])
+    # revisar si existe la carrera 
+    db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
+    # cambiar datos del usuario
+    db_user.first_name = user.first_name
+    db_user.last_name = user.last_name
+    db_user.career = db_career
+    try:
+        db.add(db_user)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    return db_user
+
+def update_student_status(identification: str, status: str, db: Session):
+    """
+    Crea un usuario 
+    """
+    db_user = db.query(models.User).filter(models.User.identification == identification).first()
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages['user_not_exists'])
+    # cambiar el estatus
+    db_user.status = status
+    try:
+        # actualizar base de datos
+        db.add(db_user)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    return db_user
+
 
 def get_user(identification: str, db: Session):
     """
@@ -130,9 +169,9 @@ def create_users_from_list(users: List[User], role: str, db: Session):
                 successful.append(user)
             except Exception as e:
                 db.rollback()
-                failed.append({'User': new_user, 'detail': str(e)})
+                failed.append({'User': user, 'detail': str(e)})
         else:
-            failed.append([user, messages['invalid_id_format']])
+            failed.append({'User': user, 'detail': messages['invalid_id_format']})
 
     response['successful'] = successful
     response['failed'] = failed        
@@ -150,4 +189,6 @@ def build_new_user(user: User, role: str, db: Session):
         career = db_career
     )  
     return new_user
+
+
 

@@ -21,3 +21,55 @@ create_student_response_body_fail_2 = {
     "status_code": 500,
     "detail": "Internal server error" 
 }
+
+# -----------------------------------------------------------------------
+# Registrar varios estudiantes: users/create_students
+# Registrar varios tutores: users/create_tutors
+# -----------------------------------------------------------------------
+create_students_request = [
+    {
+        "identification": "string",
+        "first_name": "string",
+        "last_name": "string",
+        "career": "string"
+    },
+    {
+        "identification": "string",
+        "first_name": "string",
+        "last_name": "string",
+        "career": "string"
+    }
+]
+create_students_response_body_success = {
+    "status_code": 200,
+    "successful": [
+        {
+            "identification": "string",
+            "first_name": "string",
+            "last_name": "string",
+            "career": "string"
+        },
+        {
+            "identification": "string",
+            "first_name": "string",
+            "last_name": "string",
+            "career": "string"
+        }
+    ]
+
+    "failed": [
+        {
+            "identification": "string",
+            "first_name": "string",
+            "last_name": "string",
+            "career": "string"
+        },
+        {
+            "identification": "string",
+            "first_name": "string",
+            "last_name": "string",
+            "career": "string"
+        }
+    ]
+}
+

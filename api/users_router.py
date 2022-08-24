@@ -55,7 +55,7 @@ def create_tutors(user: User, db: Session = Depends(get_db)):
     return response
 
 
-@users_router.get('/user/{identification}')
+@users_router.get('/get_user/{identification}')
 def get_user(identification: str, db: Session = Depends(get_db)):
     """
     get user by identification
@@ -64,7 +64,26 @@ def get_user(identification: str, db: Session = Depends(get_db)):
     return user
 
 
-@users_router.get('/students')
+@users_router.put('/update_user/{identification}')
+def update_user(user: User, identification: str, db: Session = Depends(get_db)):
+    """
+    Update data user 
+    """
+    users = crud.users.update_user(user, identification, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
+@users_router.put('/update_student_status/{identification}/{status}')
+def update_student_status(identification: str, status: str, db: Session = Depends(get_db)):
+    """
+    Update student status
+    """
+    users = crud.users.update_student_status(identification, status, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
+
+@users_router.get('/get_students')
 def get_students(db: Session = Depends(get_db)):
     """
     get students
@@ -73,7 +92,7 @@ def get_students(db: Session = Depends(get_db)):
     return users
 
 
-@users_router.get('/students/{status}')
+@users_router.get('/get_students/{status}')
 def get_students_by_status(status: str, db: Session = Depends(get_db)):
     """
     get students by status
@@ -82,13 +101,16 @@ def get_students_by_status(status: str, db: Session = Depends(get_db)):
     return users
 
 
-@users_router.get('/tutors')
+@users_router.get('/get_tutors')
 def get_tutors(db: Session = Depends(get_db)):
     """
     get a list of tutors
     """
     users = crud.users.get_users('Tutor', db)
     return users
+
+
+
 
 
 @users_router.post('/create_students_from_file')
