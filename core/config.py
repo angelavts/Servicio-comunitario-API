@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     USERS_FILE_FORMAT = ['CÉDULA', 'NOMBRE', 'APELLIDO', 'CARRERA']
     PROJECTS_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'FECHA INICIO', 'CARRERA', 'NOMBRE COORDINADOR',
                             'APELLLIDO COORDINADOR', 'CÉDULA COORDINADOR', 'CARRERA COORDINADOR']
+    API_KEYS = ['akljnv13bvi2vfo0b0bw']
 
 
 settings = Settings()

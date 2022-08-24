@@ -1,6 +1,7 @@
 import crud
 import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.security.api_key import APIKey
 from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.users_schema import User, row_to_schema
@@ -10,6 +11,7 @@ from core import utils
 from core import responses
 from core.config import settings
 from core.messages import messages
+from core import auth
 from typing import List
 
 
@@ -19,7 +21,7 @@ from typing import List
 users_router = APIRouter()
 
 @users_router.post('/create_student')
-def create_student(user: User, db: Session = Depends(get_db)):
+def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     create a student
     """
@@ -29,7 +31,7 @@ def create_student(user: User, db: Session = Depends(get_db)):
 
 
 @users_router.post('/create_students')
-def create_students(users: List[User], db: Session = Depends(get_db)):
+def create_students(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     create students from list
     """
@@ -38,7 +40,7 @@ def create_students(users: List[User], db: Session = Depends(get_db)):
 
 
 @users_router.post('/create_tutor')
-def create_tutor(user: User, db: Session = Depends(get_db)):
+def create_tutor(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     create a tutor
     """
@@ -47,7 +49,7 @@ def create_tutor(user: User, db: Session = Depends(get_db)):
 
 
 @users_router.post('/create_tutors')
-def create_tutors(user: User, db: Session = Depends(get_db)):
+def create_tutors(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     create tutors from list
     """
@@ -65,7 +67,7 @@ def get_user(identification: str, db: Session = Depends(get_db)):
 
 
 @users_router.put('/update_user/{identification}')
-def update_user(user: User, identification: str, db: Session = Depends(get_db)):
+def update_user(user: User, identification: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Update data user 
     """
@@ -74,7 +76,7 @@ def update_user(user: User, identification: str, db: Session = Depends(get_db)):
 
 
 @users_router.put('/update_student_status/{identification}/{status}')
-def update_student_status(identification: str, status: str, db: Session = Depends(get_db)):
+def update_student_status(identification: str, status: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Update student status
     """
@@ -114,7 +116,8 @@ def get_tutors(db: Session = Depends(get_db)):
 
 
 @users_router.post('/create_students_from_file')
-async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)):
+async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
+                    , api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crea estudiantes a partir de un archivo
     """
@@ -134,7 +137,8 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db))
     return response
 
 @users_router.post('/create_tutors_from_file')
-async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)):
+async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
+                    , api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crea estudiantes a partir de un archivo
     """
