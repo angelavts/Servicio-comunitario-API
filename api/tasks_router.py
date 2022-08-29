@@ -3,10 +3,11 @@ import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from os import getcwd
-from schemas.tasks_schema import Task, row_to_schema
+from schemas.tasks_schema import Task
 from db.db import get_db
 from sqlalchemy.orm import Session
 from core import utils
+from core import responses
 from core.config import settings
 
 
@@ -19,35 +20,32 @@ tasks_router = APIRouter()
 
 
 # crear tarea
-@tasks_router.post('/', response_model=Task, tags=['task'])
+@tasks_router.post('/', tags=['task'])
 def create_task(task: Task, db: Session = Depends(get_db)):
     """
     create a task
     """
     task = crud.tasks.create(task, db)
-    return task
+    return responses.TASK_CREATED_SUCCESS
 
 
-# crear tareas a partir de archivo
-@tasks_router.post('/upload')
-async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)):
+@tasks_router.get('/{project_id}/{student_identification}', tags=['task'])
+def create_task(project_id: int, student_identification: str, db: Session = Depends(get_db)):
     """
-    create tasks from a file
+    get task list of a student
     """
-    # with open(getcwd() + file.filename, 'wb') as myfile:
-    if not utils.is_valid_file(file.filename):
-        raise HTTPException(400, detail="Invalid document type") 
+    tasks = crud.tasks.get_tasks_from_student(project_id, student_identification, db)
+    return tasks
 
-    # save file
-    upload_path = utils.get_upload_path(file.filename)
-    with open(upload_path, 'wb') as myfile:
-        content = await file.read()
-        myfile.write(content)
-        myfile.close()
 
-    schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, CORRECT_COLUMNS)
-    response = crud.tasks.create_from_list(schema_list, db)
-    return response
+
+@tasks_router.put('/{task_id}', tags=['task'])
+def create_task(task_id: int, status: str, db: Session = Depends(get_db)):
+    """
+    Update task status
+    """
+    tasks = crud.tasks.update_task_status(task_id, status, db)
+    return responses.TASK_UPDATED_SUCCESS
 
 
 @tasks_router.get('/download/{file_name}')

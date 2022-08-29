@@ -15,9 +15,15 @@ def create_institutions(db: Session):
             name='Universidad de Carabobo'
         )  
     )
-    for institution in institutions:
-        db.add(institution)
-        db.commit() 
+    
+
+    try:
+        for institution in institutions:
+            db.add(institution)
+            db.commit() 
+    except Exception as e:
+        print(e)
+        db.rollback()
 
 def create_faculties(db: Session):
     faculties = []
@@ -25,12 +31,16 @@ def create_faculties(db: Session):
         models.Faculty(
             name='Facultad Experimental de Ciencias y Tecnologías',
             acronym='FACYT',
-            id_institution = 1
+            institution_id = 1
         )  
     )
-    for faculty in faculties:
-        db.add(faculty)
-        db.commit()
+    try:
+        for faculty in faculties:
+            db.add(faculty)
+            db.commit()
+    except Exception as e:
+        print(e)
+        db.rollback()
 
 
 def create_careers(db: Session):
@@ -38,33 +48,38 @@ def create_careers(db: Session):
     careers.append(
         models.Career(
             name='Computación',
-            id_faculty= 1
+            faculty_id= 1
         )  
     )
     careers.append(
         models.Career(
             name='Química',
-            id_faculty= 1
+            faculty_id= 1
         )  
     )
     careers.append(
         models.Career(
             name='Física',
-            id_faculty= 1
+            faculty_id= 1
         )  
     )
     careers.append(
         models.Career(
             name='Matemática',
-            id_faculty= 1
+            faculty_id= 1
         )  
     )
     careers.append(
         models.Career(
             name='Biología',
-            id_faculty= 1
+            faculty_id= 1
         )  
     )
-    for career in careers:
-        db.add(career)
-        db.commit()
+    try:
+        for career in careers:
+            db.add(career)
+            db.commit()   
+    except Exception as e:
+        print(e)
+        db.rollback()
+    

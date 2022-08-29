@@ -5,5 +5,10 @@ messages = {
     'invalid_document_type' : 'Invalid document type',
     'invalid_document_format' : 'Invalid document format',
     'user_not_exists': 'User not found',
-    'incorrect_status': 'Incorrect_status'
+    'incorrect_status': 'Incorrect_status',
+    'task_exists': 'Task already exists',
+    'student_not_exists': 'Student not found',
+    'tutor_not_exists': 'Tutor not found',
+    'task_not_exists' : 'Task not found'
+
 }
