@@ -10,17 +10,13 @@ from core import utils
 from core import responses
 from core.config import settings
 
-
-CORRECT_COLUMNS = settings.TASK_FILE_FORMAT
-
-
 # crear router
 
-tasks_router = APIRouter()
+projects_router = APIRouter()
 
 
 # crear tarea
-@tasks_router.post('/', tags=['projects'])
+@projects_router.post('/', tags=['projects'])
 def create_project(project: Project, db: Session = Depends(get_db)):
     """
     create a project
