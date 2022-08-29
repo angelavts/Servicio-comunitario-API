@@ -11,3 +11,7 @@ role_enum = ENUM(*role_enum, name='role_enum')
 
 user_status_enum = ('Activo','Inactivo', 'Aprobado')
 user_status_enum = ENUM(*user_status_enum, name='user_status_enum')
+
+
+project_status_enum = ('Activo','Inactivo')
+project_status_enum = ENUM(*project_status_enum, name='project_status_enum')
