@@ -12,7 +12,8 @@ from core import responses
 from core.config import settings
 from core.messages import messages
 from core import auth
-from typing import List
+from typing import List, Optional
+from db.enums import UserStatusEnum, RoleEnum
 
 
 
@@ -20,102 +21,43 @@ from typing import List
 
 users_router = APIRouter()
 
-@users_router.post('/create_student')
+@users_router.post('/create_student', tags=['users'])
 def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
-    create a student
+    Crear un estudiante
     """
-    user_response = crud.users.create_user(user, 'Estudiante', db)
+    user_response = crud.users.create_user(user, RoleEnum.Student, db)
     return responses.USER_CREATED_SUCCESS
 
 
 
-@users_router.post('/create_students')
+@users_router.post('/create_students', tags=['users'])
 def create_students(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
-    create students from list
+    Crear estudiantes a partir de una lista
     """
-    response = crud.users.create_users_from_list(users, 'Estudiante', db)
+    response = crud.users.create_users_from_list(users, RoleEnum.Student, db)
     return response
 
 
-@users_router.post('/create_tutor')
+@users_router.post('/create_tutor', tags=['users'])
 def create_tutor(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
-    create a tutor
+    Crear un tutor
     """
-    user_response = crud.users.create_user(user, 'Tutor', db)
+    user_response = crud.users.create_user(user, RoleEnum.Tutor, db)
     return responses.USER_CREATED_SUCCESS
 
 
-@users_router.post('/create_tutors')
+@users_router.post('/create_tutors', tags=['users'])
 def create_tutors(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
-    create tutors from list
+    Crear tutores a partir de una lista
     """
-    response = crud.users.create_users_from_list(users, 'Tutor', db)
+    response = crud.users.create_users_from_list(users, RoleEnum.Tutor, db)
     return response
 
-
-@users_router.get('/get_user/{identification}')
-def get_user(identification: str, db: Session = Depends(get_db)):
-    """
-    get user by identification
-    """
-    user = crud.users.get_user(identification, db)
-    return user
-
-
-@users_router.put('/update_user/{identification}')
-def update_user(user: User, identification: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
-    """
-    Update data user 
-    """
-    users = crud.users.update_user(user, identification, db)
-    return responses.USER_UPDATED_SUCCESS
-
-
-@users_router.put('/update_student_status/{identification}/{status}')
-def update_student_status(identification: str, status: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
-    """
-    Update student status
-    """
-    users = crud.users.update_student_status(identification, status, db)
-    return responses.USER_UPDATED_SUCCESS
-
-
-
-@users_router.get('/get_students')
-def get_students(db: Session = Depends(get_db)):
-    """
-    get students
-    """
-    users = crud.users.get_users('Estudiante', db)
-    return users
-
-
-@users_router.get('/get_students/{status}')
-def get_students_by_status(status: str, db: Session = Depends(get_db)):
-    """
-    get students by status
-    """
-    users = crud.users.get_users_by_status('Estudiante', status, db)
-    return users
-
-
-@users_router.get('/get_tutors')
-def get_tutors(db: Session = Depends(get_db)):
-    """
-    get a list of tutors
-    """
-    users = crud.users.get_users('Tutor', db)
-    return users
-
-
-
-
-
-@users_router.post('/create_students_from_file')
+@users_router.post('/create_students_from_file', tags=['users'])
 async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
                     , api_key: APIKey = Depends(auth.get_api_key)):
     """
@@ -136,7 +78,9 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
     response = crud.users.create_users_from_list(schema_list, 'Estudiante', db)
     return response
 
-@users_router.post('/create_tutors_from_file')
+
+
+@users_router.post('/create_tutors_from_file', tags=['users'])
 async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
                     , api_key: APIKey = Depends(auth.get_api_key)):
     """
@@ -156,6 +100,83 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
     schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, settings.USERS_FILE_FORMAT)
     response = crud.users.create_users_from_list(schema_list, 'Tutor', db)
     return response
+
+
+
+@users_router.put('/update_user/{identification}', tags=['users'])
+def update_user(user: User, identification: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Actualiza los datos de un usuario 
+    """
+    users = crud.users.update_user(user, identification, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
+@users_router.put('/update_student_status/{identification}/{status}', tags=['users'])
+def update_student_status(identification: str, status: UserStatusEnum, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Actualiza el estatus de un estudiante
+    """
+    users = crud.users.update_student_status(identification, status, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
+@users_router.get('/get_students')
+@users_router.get('/get_students/by_status/{status}', tags=['users'])
+def get_students(status: Optional[UserStatusEnum] = None, db: Session = Depends(get_db)):
+    """
+    Obtener una lista de estudiantes con los siguientes campos
+    Cédula, nombre, apellido, horas, proyecto, fecha de aprobación
+    """
+    users = crud.users.get_students(db, status)
+    return users
+
+
+@users_router.get('/get_students_without_project', tags=['users'])
+def get_students_without_project(db: Session = Depends(get_db)):
+    """
+    Obtener una lista de estudiantes que están activos pero
+    no tienen proyecto asignado
+    """
+    users = crud.users.get_students_without_project(db)
+    return users
+
+
+
+@users_router.get('/get_profile_info/{identification}', tags=['users'])
+def get_profile_info(identification: str, db: Session = Depends(get_db)):
+    """
+    Obtener los datos del perfil de un usuario
+    """
+    users = crud.users.get_profile_info(identification, db)
+    return users
+
+
+
+@users_router.get('/get_user/{identification}', tags=['users'])
+def get_user(identification: str, db: Session = Depends(get_db)):
+    """
+    Obtiene los datos de un usuario a partir de la cédula
+    """
+    user = crud.users.get_user_by_identification(identification, db)
+    return user
+
+
+
+
+
+@users_router.get('/get_tutors', tags=['users'])
+def get_tutors(db: Session = Depends(get_db)):
+    """
+    Obtiene la lista de tutores
+    """
+    users = crud.users.get_users_by_role(RoleEnum.Tutor, db)
+    return users
+
+
+
+
+
 
 
 

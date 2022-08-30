@@ -9,6 +9,10 @@ messages = {
     'task_exists': 'Task already exists',
     'student_not_exists': 'Student not found',
     'tutor_not_exists': 'Tutor not found',
-    'task_not_exists' : 'Task not found'
+    'task_not_exists' : 'Task not found',
+    'project_not_exists' : 'Project not found',
+    'coordinator_not_exists' : 'Coordinator not found',
+    'career_not_exists' : 'Career not found',
+    'project_exists': 'Project already exists'
 
 }

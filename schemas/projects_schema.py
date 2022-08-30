@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List
 from datetime import datetime
 
-# crear una tarea
+# crear un proyecto
 class Project(BaseModel):
     name: str 
     description: str 

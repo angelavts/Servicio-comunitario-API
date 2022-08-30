@@ -13,3 +13,10 @@ TASK_CREATED_SUCCESS = {
 TASK_UPDATED_SUCCESS = {
     'detail': 'Task updated successfully'
 }
+PROJECT_CREATED_SUCCESS = {
+    'detail': 'Project created successfully'
+}
+
+PROJECT_UPDATED_SUCCESS = {
+    'detail': 'Project updated successfully'
+}

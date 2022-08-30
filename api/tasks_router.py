@@ -5,10 +5,12 @@ from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.tasks_schema import Task
 from db.db import get_db
+from db.enums import TaskStatusEnum
 from sqlalchemy.orm import Session
 from core import utils
 from core import responses
 from core.config import settings
+
 
 
 CORRECT_COLUMNS = settings.TASK_FILE_FORMAT
@@ -20,7 +22,7 @@ tasks_router = APIRouter()
 
 
 # crear tarea
-@tasks_router.post('/', tags=['task'])
+@tasks_router.post('/create_task', tags=['tasks'])
 def create_task(task: Task, db: Session = Depends(get_db)):
     """
     create a task
@@ -29,23 +31,44 @@ def create_task(task: Task, db: Session = Depends(get_db)):
     return responses.TASK_CREATED_SUCCESS
 
 
-@tasks_router.get('/{project_id}/{student_identification}', tags=['task'])
-def create_task(project_id: int, student_identification: str, db: Session = Depends(get_db)):
-    """
-    get task list of a student
-    """
-    tasks = crud.tasks.get_tasks_from_student(project_id, student_identification, db)
-    return tasks
-
-
-
-@tasks_router.put('/{task_id}', tags=['task'])
-def create_task(task_id: int, status: str, db: Session = Depends(get_db)):
+@tasks_router.put('/update_task_status/{task_id}/{status}', tags=['tasks'])
+def update_task_status(task_id: int, status: TaskStatusEnum, db: Session = Depends(get_db)):
     """
     Update task status
     """
     tasks = crud.tasks.update_task_status(task_id, status, db)
     return responses.TASK_UPDATED_SUCCESS
+
+
+@tasks_router.get('/get_student_tasks/{project_id}/{student_identification}', tags=['tasks'])
+def get_student_tasks(project_id: int, student_identification: str, db: Session = Depends(get_db)):
+    """
+    Obtener la lista de tareas de un estudiante en un proyecto especifico
+    """
+    tasks = crud.tasks.get_tasks_by_student(project_id, student_identification, db)
+    return tasks
+
+@tasks_router.get('/get_project_tasks/{project_id}', tags=['tasks'])
+def get_project_tasks(project_id: int, db: Session = Depends(get_db)):
+    """
+    Obtener la lista de tareas de un estudiante en un proyecto especifico
+    """
+    tasks = crud.tasks.get_tasks_by_project(project_id, db)
+    return tasks
+
+
+@tasks_router.get('/get_tutor_tasks/{tutor_identification}', tags=['tasks'])
+def get_tutor_tasks(tutor_identification: str, db: Session = Depends(get_db)):
+    """
+    Obtener la lista de tareas de las cuales se es tutor
+    """
+    tasks = crud.tasks.get_tasks_by_tutor(tutor_identification, db)
+    return tasks
+
+
+
+
+
 
 
 @tasks_router.get('/download/{file_name}')

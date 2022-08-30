@@ -8,6 +8,7 @@ from api.users_router import users_router
 from api.projects_router import projects_router
 from fastapi.middleware.cors import CORSMiddleware
 from db.populate_db import populate_static_db
+from db.test_data import populate_db
 
 
 
@@ -17,8 +18,10 @@ def create_tables():
     Base.metadata.create_all(engine)
 
 def create_and_populate_db():
+    # crear bases de datos y llenarla con datos iniciales
     create_tables()
     populate_static_db()
+    populate_db()
     # create_tasks()
 
 def start_application():
