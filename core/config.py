@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     DB_DATABASE: str = "Test"
     DATABASE_URL: str = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}'
     APP_HOST: str = "localhost"
-    APP_PORT: int = 8000
+    APP_PORT: int = 8001
     VALID_FILE_EXTENSIONS: list = ['.xlsx', '.xls']
     ROOT_DIR: str = path.dirname(path.abspath('main.py'))
     UPLOAD_FOLDER: str = "uploads"
@@ -27,6 +27,10 @@ class Settings(BaseSettings):
     PROJECTS_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'FECHA INICIO', 'CARRERA', 'NOMBRE COORDINADOR',
                             'APELLLIDO COORDINADOR', 'CÉDULA COORDINADOR', 'CARRERA COORDINADOR']
     API_KEYS = ['akljnv13bvi2vfo0b0bw']
+    ORIGINS = [
+            "http://localhost",
+            "http://localhost:4200",
+        ]
 
 
 settings = Settings()

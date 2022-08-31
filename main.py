@@ -12,6 +12,8 @@ from db.test_data import populate_db
 
 
 
+
+
 def create_tables():
     # puede incluir condiciones en caso de que una tabla ya esté creada
     Base.metadata.drop_all(engine) # PARA PRUEBAS
@@ -33,7 +35,15 @@ def start_application():
     _api.include_router(projects_router, prefix='/projects', tags=['projects'])
     
     create_and_populate_db()
-    return CORSMiddleware(_api)
+
+    _api.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    return _api
 
 
 
