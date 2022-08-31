@@ -11,6 +11,7 @@ from core import utils
 from core import responses
 from core.config import settings
 from datetime import datetime
+from typing import Optional
 
 # crear router
 
@@ -52,20 +53,20 @@ def get_projects_by_status(status: ProjectStatusEnum, db: Session = Depends(get_
     projects = crud.projects.get_projects_by_status(status, db)
     return projects
 
-@projects_router.get('/get_projects_by_coordinator_status/{status}', tags=['projects'])
-def get_projects_by_coordinator_status(project: Project, status: str, db: Session = Depends(get_db)):
+@projects_router.get('/get_projects_by_coordinator_status/{status}/{coordinator}', tags=['projects'])
+def get_projects_by_coordinator_status(coordinator_id: int, status: ProjectStatusEnum, db: Session = Depends(get_db)):
     """
     get project list by coordinator and status
     """
-    projects = crud.projects.get_projects_by_coordinator_status(project, status, db)
+    projects = crud.projects.get_projects_by_coordinator_status(coordinator_id, status, db)
     return projects
 
-@projects_router.get('/get_projects_by_career_status/{status}', tags=['projects'])
-def get_projects_by_career_status(project: Project, status: str, db: Session = Depends(get_db)):
+@projects_router.get('/get_projects_by_career_status/{status}/{career}', tags=['projects'])
+def get_projects_by_career_status(career: int, status: ProjectStatusEnum, db: Session = Depends(get_db)):
     """
     get project list by career and status
     """
-    projects = crud.projects.get_projects_by_career_status(project, status, db)
+    projects = crud.projects.get_projects_by_career_status(career, status, db)
     return projects
 
 @projects_router.get('/get_project/{project_id}', tags=['projects'])
@@ -103,4 +104,19 @@ def get_students_to_approval(project_id: int, db: Session = Depends(get_db)):
     project = crud.projects.get_students(project_id, db, to_approve=True)
     return project
 
+@projects_router.get('/get_active_projects', tags=['projects'])
+def get_active_projects(db: Session = Depends(get_db)):
+    """
+    get a list of active projects
+    """
+    projects = crud.projects.get_active_projects(db)
+    return projects
 
+@projects_router.get('/get_all_projects')
+@projects_router.get('/get_all_projects/by_status/{status}', tags=['projects'])
+def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = Depends(get_db)):
+    """
+    Obtiene una lista de proyectos
+    """
+    projects = crud.projects.get_all_projects(db, status)
+    return projects
