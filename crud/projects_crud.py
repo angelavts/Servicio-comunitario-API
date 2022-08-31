@@ -6,6 +6,8 @@ from fastapi import status, HTTPException
 from typing import List
 from core.messages import messages
 from datetime import datetime
+from db.enums import ProjectStatusEnum
+from sqlalchemy import func
 
 
 
@@ -131,12 +133,10 @@ def get_projects_by_status(status: str, db: Session):
                 ).all()
     return projects
 
-def get_projects_by_coordinator_status(project: Project, status: str, db: Session):
+def get_projects_by_coordinator_status(coordinator_id: int, status: str, db: Session):
     """
     Obtiene una lista de proyectos de un coordinador especifico por status
     """
-    # buscar el id del coordinador
-    coordinator = get_user_from_identification(project.coordinator_identification, 'coordinator_not_exists', db)
 
     projects = (db.query(models.Project.id,
                          models.Project.name, 
@@ -147,16 +147,14 @@ def get_projects_by_coordinator_status(project: Project, status: str, db: Sessio
                          models.Career.name.label('Career name'))
                          .join(models.User, models.User.id == models.Project.coordinator_id)
                          .join(models.Career, models.Career.id == models.Project.career_id)
-                         .filter(models.Project.coordinator_id == coordinator.id and models.Project.status == status)               
+                         .filter(models.Project.coordinator_id == coordinator_id and models.Project.status == status)               
                 ).all()
     return projects
 
-def get_projects_by_career_status(project: Project, status: str, db: Session):
+def get_projects_by_career_status(career_id: int, status: str, db: Session):
     """
     Obtiene una lista de proyectos de una carrera especifica por status
     """
-    # buscar el id de la carrera
-    career = get_career_from_name(project.career, 'career_not_exists', db)
 
     projects = (db.query(models.Project.id,
                          models.Project.name, 
@@ -167,7 +165,7 @@ def get_projects_by_career_status(project: Project, status: str, db: Session):
                          models.Career.name.label('Career name'))
                          .join(models.User, models.User.id == models.Project.coordinator_id)
                          .join(models.Career, models.Career.id == models.Project.career_id)
-                         .filter(models.Project.career_id == career.id and models.Project.status == status)               
+                         .filter(models.Project.career_id == career_id and models.Project.status == status)               
                 ).all()
     return projects
 
@@ -216,6 +214,39 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
                 .filter(models.ProjectStudent.project_id == project_id)
                 .filter(models.ProjectStudent.active == True).all())
     return db_project
+
+def get_active_projects(db: Session):
+    """
+    Obtiene una lista de proyectos activos
+    """
+    projects = (db.query(models.Project.id,
+                         models.Project.name, 
+                         models.Project.description, 
+                         models.Project.date_start,
+                         models.Project.status,
+                        func.count( models.ProjectStudent.student_id).label('student_count'))
+                         .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
+                         .filter(models.Project.status == ProjectStatusEnum.Active and models.ProjectStudent.active == True)
+                         .group_by(models.Project.id)              
+                ).all()
+    return projects
+
+def get_all_projects(db: Session, status: str=None):
+    """
+    Obtiene una lista de proyectos
+    """
+    filter = []
+    if status:
+        filter = [models.Project.status == status]
+    projects = (db.query(models.Project.id,
+                         models.Project.name, 
+                         models.Project.description, 
+                         models.Project.date_start,
+                         models.Project.date_end,
+                         models.Project.status)
+                         .filter(*filter)            
+                ).all()
+    return projects
 
 
 
