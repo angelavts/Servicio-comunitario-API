@@ -124,9 +124,10 @@ def get_projects_by_status(status: str, db: Session):
                          models.Project.name, 
                          models.Project.date_start, 
                          models.Project.date_end,
-                         models.User.first_name.label('Coordinator name'), 
-                         models.User.last_name.label('Coordinator last name'), 
-                         models.Career.name.label('Career name'))
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
                          .join(models.User, models.User.id == models.Project.coordinator_id)
                          .join(models.Career, models.Career.id == models.Project.career_id)
                          .filter(models.Project.status == status)               
@@ -142,9 +143,10 @@ def get_projects_by_coordinator_status(coordinator_id: int, status: str, db: Ses
                          models.Project.name, 
                          models.Project.date_start, 
                          models.Project.date_end,
-                         models.User.first_name.label('Coordinator name'), 
-                         models.User.last_name.label('Coordinator last name'), 
-                         models.Career.name.label('Career name'))
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
                          .join(models.User, models.User.id == models.Project.coordinator_id)
                          .join(models.Career, models.Career.id == models.Project.career_id)
                          .filter(models.Project.coordinator_id == coordinator_id and models.Project.status == status)               
@@ -160,9 +162,10 @@ def get_projects_by_career_status(career_id: int, status: str, db: Session):
                          models.Project.name, 
                          models.Project.date_start, 
                          models.Project.date_end,
-                         models.User.first_name.label('Coordinator name'), 
-                         models.User.last_name.label('Coordinator last name'), 
-                         models.Career.name.label('Career name'))
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
                          .join(models.User, models.User.id == models.Project.coordinator_id)
                          .join(models.Career, models.Career.id == models.Project.career_id)
                          .filter(models.Project.career_id == career_id and models.Project.status == status)               

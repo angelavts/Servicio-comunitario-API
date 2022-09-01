@@ -55,7 +55,7 @@ def start_server():
         host=settings.APP_HOST,
         port=settings.APP_PORT,
         reload=True,
-        workers=1,
+        workers=1
     )
 
 
