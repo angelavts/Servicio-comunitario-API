@@ -169,6 +169,15 @@ students_json = [
         'career_id' : 1,
         'role' : 'Estudiante',
         'id' : 20
+    },
+    {
+        'identification' : 'V-26000021',
+        'first_name' : 'Nombre Estudiante 21',
+        'last_name' : 'Apellido Estudiante 21',    
+        'career_id' : 2,
+        'role' : 'Estudiante',
+        'id' : 21
+        
     }
 ]
 
@@ -918,7 +927,7 @@ project_student_json = [
     {
         'project_id' : 3,
         'student_id' : 3,  
-        'active': True
+        'active': False
 
     },
     {
@@ -1015,7 +1024,7 @@ project_student_json = [
         'project_id' : 5,
         'student_id' : 20,  
         'active': True
-    },
+    }
 
 ]
 

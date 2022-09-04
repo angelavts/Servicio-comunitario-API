@@ -146,17 +146,6 @@ def get_students_without_project(db: Session = Depends(get_db)):
     return users
 
 
-
-@users_router.get('/get_profile_info/{identification}', tags=['users'])
-def get_profile_info(identification: str, db: Session = Depends(get_db)):
-    """
-    Obtener los datos del perfil de un usuario
-    """
-    users = crud.users.get_profile_info(identification, db)
-    return users
-
-
-
 @users_router.get('/get_user/{identification}', tags=['users'])
 def get_user(identification: str, db: Session = Depends(get_db)):
     """

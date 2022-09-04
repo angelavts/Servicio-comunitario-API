@@ -9,6 +9,7 @@ from core import utils
 from core.messages import messages
 from datetime import datetime
 from sqlalchemy import any_, exists, func, case
+from itertools import groupby
 
 
 # ------------------------------------------ POST ------------------------------------
@@ -134,7 +135,7 @@ def get_students(db: Session, status: str=None):
 
     projects_alias = aliased(models.Project, name='project')
     career_alias = aliased(models.Career, name='career')
-    db_user = (db.query(
+    db_students = (db.query(
                     models.User.id,
                     models.User.identification, 
                     models.User.first_name, 
@@ -146,11 +147,11 @@ def get_students(db: Session, status: str=None):
                     projects_alias)
                 .filter(*filters)
                 .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
-                .filter(models.ProjectStudent.active == True)
+                .filter(models.ProjectStudent.active)
                 .outerjoin(projects_alias, projects_alias.id == models.ProjectStudent.project_id)   
                 .outerjoin(career_alias, career_alias.id == models.User.career_id)                
                 .all())
-    return db_user
+    return db_students
 
 def get_students_without_project(db: Session):
     """
@@ -159,6 +160,7 @@ def get_students_without_project(db: Session):
     todas sus relaciones tienen active en falso 
     """
     filters = [models.User.role == RoleEnum.Student, models.User.status == UserStatusEnum.Active]
+    career_alias = aliased(models.Career, name='career')
     db_user = (db.query(
                     models.User.id,
                     models.User.identification, 
@@ -168,41 +170,16 @@ def get_students_without_project(db: Session):
                     models.User.status, 
                     models.User.career_id, 
                     models.User.date_approval,
-                    func.count(models.ProjectStudent.active)
+                    func.count(models.ProjectStudent.active),
+                    career_alias
                 )
                 .filter(*filters)
                 .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
-                .group_by(models.User.id)
-                .having(func.count(1).filter(models.ProjectStudent.active) == 0)).all()            
+                .group_by(career_alias, models.User.id)
+                .having(func.count(1).filter(models.ProjectStudent.active) == 0)
+                .outerjoin(career_alias, career_alias.id == models.User.career_id)
+                ).all()            
     return db_user
-
-def get_profile_info(identification: str, db: Session):
-    """
-    Obtener los datos del perfil de un usuario, incluye:
-    Cédula, nombre, apellido, horas, estatus, carrera, Proyecto
-    """
-    filters = [models.User.identification == identification]
-    db_user = (db.query(
-                    models.User.id,
-                    models.User.identification, 
-                    models.User.first_name, 
-                    models.User.last_name,
-                    models.User.total_hours, 
-                    models.User.status,
-                    models.User.career_id,         
-                    models.User.date_approval,            
-                    models.Career.name.label('career_name'),
-                    models.Project.id.label('project_id'),
-                    models.Project.name.label('project_name'))
-                .filter(*filters)
-                .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
-                .filter(models.ProjectStudent.active == True or models.User.role == RoleEnum.Tutor)
-                .outerjoin(models.Project, models.Project.id == models.ProjectStudent.project_id)
-                .outerjoin(models.Career, models.Career.id == models.User.career_id)
-                .first())
-    return db_user
-
-
 
 
 def get_users_by_role(role: str, db: Session):
