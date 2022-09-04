@@ -2,7 +2,7 @@
 from db import db_models as models 
 from sqlalchemy.orm import Session
 from db.db import get_db
-
+from datetime import datetime
 
 # crear una sesión global para este script
 db = get_db()
@@ -339,6 +339,31 @@ projects_json = [
     }  
 ]
 
+inactive_projects_json = [
+    {
+        'name' : 'Proyecto 7',
+        'description' : 'Descripción proyecto 7',   
+        'coordinator_id' : 34,
+        'career_id' : 1,
+        'date_end': datetime.now()
+    },
+    {
+        'name' : 'Proyecto 8',
+        'description' : 'Descripción proyecto 8', 
+        'coordinator_id' : 31,
+        'career_id' : 2,
+        'date_end': datetime.now()
+    },
+    {
+        'name' : 'Proyecto 9',
+        'description' : 'Descripción proyecto 9', 
+        'coordinator_id' : 33,
+        'career_id' : 3,
+        'date_end': datetime.now()
+    },
+
+]
+
 tasks_json = [
     {
         'name' : 'Tarea 1',
@@ -401,7 +426,7 @@ tasks_json = [
         'status' : 'Pendiente',
         'student_id' : 3,
         'project_id' : 1,
-        'tutor_id' : 30
+        'tutor_id' : None
     },
     {
         'name' : 'Tarea 8',
@@ -904,7 +929,7 @@ project_student_json = [
     {
         'project_id' : 1,
         'student_id' : 3,  
-        'active': True
+        'active': False
     },
     {
         'project_id' : 5,
@@ -1058,6 +1083,22 @@ def populate_projects():
         except Exception as e:
             db.rollback()
 
+def populate_inactive_projects():
+    for project in inactive_projects_json:
+        new_project = models.Project(
+            name=project['name'],
+            description=project['description'],
+            coordinator_id=project['coordinator_id'],            
+            career_id = project['career_id'],
+            date_end = project['date_end'],
+            status = 'Inactivo'
+        )  
+        try:
+            db.add(new_project)
+            db.commit()        
+        except Exception as e:
+            db.rollback()
+
 def populate_projects_students():
     for project_student in project_student_json:
         new_project_student = models.ProjectStudent(
@@ -1094,6 +1135,7 @@ def populate_db():
     populate_tutors()
     populate_coordinators()
     populate_projects()
+    populate_inactive_projects()
     populate_projects_students()
     populate_tasks()
 

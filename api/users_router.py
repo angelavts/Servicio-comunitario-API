@@ -21,6 +21,8 @@ from db.enums import UserStatusEnum, RoleEnum
 
 users_router = APIRouter()
 
+# ------------------------------ POST ------------------------------------------------
+
 @users_router.post('/create_student', tags=['users'])
 def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
@@ -102,6 +104,7 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
     return response
 
 
+# ------------------------------ UPDATE ------------------------------------------------
 
 @users_router.put('/update_user/{identification}', tags=['users'])
 def update_user(user: User, identification: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
@@ -120,9 +123,10 @@ def update_student_status(identification: str, status: UserStatusEnum, db: Sessi
     users = crud.users.update_student_status(identification, status, db)
     return responses.USER_UPDATED_SUCCESS
 
+# ------------------------------ GET ------------------------------------------------
 
 @users_router.get('/get_students')
-@users_router.get('/get_students/by_status/{status}', tags=['users'])
+@users_router.get('/get_students/{status}', tags=['users'])
 def get_students(status: Optional[UserStatusEnum] = None, db: Session = Depends(get_db)):
     """
     Obtener una lista de estudiantes con los siguientes campos
@@ -160,9 +164,6 @@ def get_user(identification: str, db: Session = Depends(get_db)):
     """
     user = crud.users.get_user_by_identification(identification, db)
     return user
-
-
-
 
 
 @users_router.get('/get_tutors', tags=['users'])

@@ -2,6 +2,7 @@ from datetime import datetime
 from db.session import Base
 from db.enums import role_enum, user_status_enum
 from sqlalchemy import String, Boolean, Integer, Column, Text, DateTime, UniqueConstraint, ForeignKey
+from sqlalchemy.orm import relationship
 
 class Career(Base):
     __tablename__ = 'careers'

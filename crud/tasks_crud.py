@@ -2,13 +2,33 @@ from db import db_models as models
 from schemas.tasks_schema import Task
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import aliased
 from fastapi import status, HTTPException
 from typing import List
 from core.messages import messages
 from datetime import datetime
 from db.enums import TaskStatusEnum, UserStatusEnum
 
+# ------------------------------------------ TOOLS -------------------------------------------
 
+
+def get_user_by_identification(identification: str, error_message: str, db: Session):
+    # buscar el id del estudiante
+    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
+
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages[error_message])
+    
+    return db_user
+
+def get_project_by_id(project_id: str, error_message: str, db: Session):
+    # buscar el id del estudiante
+    db_user =  db.query(models.Project).filter(models.Project.id == project_id).first()
+
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages[error_message])
+    
+    return db_user
 
 
 # ------------------------------------------ POST ------------------------------------
@@ -76,28 +96,14 @@ def update_task_status(task_id: int, status: str, db: Session):
 
 # ------------------------------------------ GET ------------------------------------
 
-def get_user_by_identification(identification: str, error_message: str, db: Session):
-    # buscar el id del estudiante
-    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
 
-    if db_user is None:
-        raise HTTPException(status_code=400, detail=messages[error_message])
-    
-    return db_user
-
-def get_project_by_id(project_id: str, error_message: str, db: Session):
-    # buscar el id del estudiante
-    db_user =  db.query(models.Project).filter(models.Project.id == project_id).first()
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail=messages[error_message])
-    
-    return db_user
 
 def get_tasks_by_student(project_id: int, student_identification: str, db: Session):
 
     # buscar el id del estudiante
     db_student = get_user_by_identification(student_identification, 'student_not_exists', db)
+
+    user_alias = aliased(models.User, name='tutor')
 
     db_tasks = (db.query(
                     models.Task.id, 
@@ -107,10 +113,9 @@ def get_tasks_by_student(project_id: int, student_identification: str, db: Sessi
                     models.Task.date_start,
                     models.Task.date_end,
                     models.Task.status,
-                    models.User.first_name.label('tutor_first_name'),
-                    models.User.first_name.label('tutor_last_name'),
+                    user_alias,
                     )
-                    .join(models.User, models.User.id == models.Task.tutor_id)
+                    .join(user_alias, user_alias.id == models.Task.tutor_id)
                     .filter(models.Task.student_id == db_student.id)
                     .all())
     return db_tasks
@@ -124,6 +129,9 @@ def get_tasks_by_project(project_id: int, db: Session):
     # buscar el id del proyecto
     db_project = get_project_by_id(project_id, 'project_not_exists', db)
 
+    user_alias = aliased(models.User, name='student')
+    tutor_alias = aliased(models.User, name='tutor')
+
     db_tasks = (db.query(
                     models.Task.id, 
                     models.Task.name, 
@@ -132,17 +140,15 @@ def get_tasks_by_project(project_id: int, db: Session):
                     models.Task.date_start,
                     models.Task.date_end,
                     models.Task.status,
-                    models.Task.student_id,
-                    models.Task.tutor_id,
-                    models.User.first_name.label('student_first_name'),
-                    models.User.last_name.label('student_last_name')
-                    
+                    user_alias,
+                    tutor_alias  
                     )
                     .filter(models.Task.project_id == db_project.id)
-                    .join(models.User, models.User.id == models.Task.student_id)
-                    .filter(models.User.status == UserStatusEnum.Active)
-                    .join(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
-                    .filter(models.ProjectStudent.active)                    
+                    .join(user_alias, user_alias.id == models.Task.student_id)
+                    .filter(user_alias.status == UserStatusEnum.Active)
+                    .join(models.ProjectStudent, user_alias.id == models.ProjectStudent.student_id)
+                    .filter(models.ProjectStudent.active)   
+                    .outerjoin(tutor_alias, tutor_alias.id == models.Task.tutor_id)                 
                     .all())
     return db_tasks
 
@@ -157,6 +163,9 @@ def get_tasks_by_tutor(tutor_identification: str, db: Session):
     # buscar el id del tutor
     db_tutor = get_user_by_identification(tutor_identification, 'tutor_not_exists', db)
 
+    student_alias = aliased(models.User, name='student')
+    project_alias = aliased(models.Project, name='project')
+
     db_tasks = (db.query(
                     models.Task.id, 
                     models.Task.name, 
@@ -165,18 +174,15 @@ def get_tasks_by_tutor(tutor_identification: str, db: Session):
                     models.Task.date_start,
                     models.Task.date_end,
                     models.Task.status,
-                    models.Task.student_id,
-                    models.User.first_name.label('student_first_name'),
-                    models.User.last_name.label('student_last_name'),
-                    models.Task.project_id,
-                    models.Project.name.label('project_name')                 
+                    student_alias,
+                    project_alias                 
                     )
                     .filter(models.Task.tutor_id == db_tutor.id)
-                    .join(models.User, models.User.id == models.Task.student_id)
-                    .filter(models.User.status == UserStatusEnum.Active)
-                    .join(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
+                    .join(student_alias, student_alias.id == models.Task.student_id)
+                    .filter(student_alias.status == UserStatusEnum.Active)
+                    .join(models.ProjectStudent, student_alias.id == models.ProjectStudent.student_id)
                     .filter(models.ProjectStudent.active)      
-                    .join(models.Project, models.Project.id == models.Task.project_id)              
+                    .join(project_alias, project_alias.id == models.Task.project_id)              
                     .all())
     return db_tasks
 

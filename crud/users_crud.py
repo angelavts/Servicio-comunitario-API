@@ -2,6 +2,7 @@ from db import db_models as models
 from db.enums import RoleEnum, UserStatusEnum
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
+from sqlalchemy.orm import aliased
 from fastapi import status, HTTPException
 from typing import List
 from core import utils
@@ -130,21 +131,24 @@ def get_students(db: Session, status: str=None):
     filters = [models.User.role == RoleEnum.Student]
     if status is not None:
         filters = [models.User.status == status]
+
+    projects_alias = aliased(models.Project, name='project')
+    career_alias = aliased(models.Career, name='career')
     db_user = (db.query(
                     models.User.id,
                     models.User.identification, 
                     models.User.first_name, 
                     models.User.last_name,
                     models.User.total_hours, 
-                    models.User.status, 
-                    models.User.career_id, 
-                    models.User.date_approval, 
-                    models.Project.id.label('project_id'),
-                    models.Project.name.label('project_name'))
+                    models.User.status,
+                    models.User.date_approval,
+                    career_alias, 
+                    projects_alias)
                 .filter(*filters)
                 .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
                 .filter(models.ProjectStudent.active == True)
-                .outerjoin(models.Project, models.Project.id == models.ProjectStudent.project_id)                
+                .outerjoin(projects_alias, projects_alias.id == models.ProjectStudent.project_id)   
+                .outerjoin(career_alias, career_alias.id == models.User.career_id)                
                 .all())
     return db_user
 

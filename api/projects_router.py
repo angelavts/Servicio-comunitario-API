@@ -45,14 +45,6 @@ def update_project_date_end(project_id: int, date: datetime, db: Session = Depen
     return responses.PROJECT_UPDATED_SUCCESS
 
 # obtener proyectos
-@projects_router.get('/get_projects_by_status/{status}', tags=['projects'])
-def get_projects_by_status(status: ProjectStatusEnum, db: Session = Depends(get_db)):
-    """
-    get project list by status
-    """
-    projects = crud.projects.get_projects_by_status(status, db)
-    return projects
-
 @projects_router.get('/get_projects_by_coordinator_status/{status}/{coordinator}', tags=['projects'])
 def get_projects_by_coordinator_status(coordinator_id: int, status: ProjectStatusEnum, db: Session = Depends(get_db)):
     """
@@ -107,13 +99,13 @@ def get_students_to_approval(project_id: int, db: Session = Depends(get_db)):
 @projects_router.get('/get_active_projects', tags=['projects'])
 def get_active_projects(db: Session = Depends(get_db)):
     """
-    get a list of active projects
+    Obtiene una lista de proyectos activos
     """
     projects = crud.projects.get_active_projects(db)
     return projects
 
 @projects_router.get('/get_all_projects')
-@projects_router.get('/get_all_projects/by_status/{status}', tags=['projects'])
+@projects_router.get('/get_all_projects/{status}', tags=['projects'])
 def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = Depends(get_db)):
     """
     Obtiene una lista de proyectos
