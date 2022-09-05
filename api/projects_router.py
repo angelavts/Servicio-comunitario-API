@@ -112,3 +112,11 @@ def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = D
     """
     projects = crud.projects.get_all_projects(db, status)
     return projects
+
+@projects_router.get('/get_inactive_projects')
+def get_all_projects(db: Session = Depends(get_db)):
+    """
+    Obtiene una lista de proyectos
+    """
+    projects = crud.projects.get_inactive_projects(db)
+    return projects

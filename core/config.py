@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     USERS_FILE_FORMAT = ['CÉDULA', 'NOMBRE', 'APELLIDO', 'CARRERA']
     PROJECTS_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'FECHA INICIO', 'CARRERA', 'NOMBRE COORDINADOR',
                             'APELLLIDO COORDINADOR', 'CÉDULA COORDINADOR', 'CARRERA COORDINADOR']
-    API_KEYS = ['akljnv13bvi2vfo0b0bw']
+    API_KEYS = ['eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZHVyYW4iLCJyb2xlcyI6IlJPTEVfR09EIiwiZXhwIjoxNjYxOTYyODQ2LCJpYXQiOjE2NjE5NTcwODZ9.qGeESQPLr64BzFrNYXmppSIXmUVADFbiA4niJZf38SkHGQzcalmHp2C44971G2dnpTRO3qcuitaVeab2p8YWEw']
     ORIGINS = [
             "http://localhost",
             "http://localhost:4200",

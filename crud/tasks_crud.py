@@ -103,19 +103,20 @@ def get_tasks_by_student(project_id: int, student_identification: str, db: Sessi
     # buscar el id del estudiante
     db_student = get_user_by_identification(student_identification, 'student_not_exists', db)
 
-    user_alias = aliased(models.User, name='tutor')
+    tutor_alias = aliased(models.User, name='tutor')
 
     db_tasks = (db.query(
                     models.Task.id, 
                     models.Task.name, 
-                    models.Task.description,
-                    models.Task.cost,
+                    models.Task.description,  
+                    tutor_alias.identification.label('tutor_indentification'), 
+                    tutor_alias.fullname.label('tutor_name'),                  
                     models.Task.date_start,
                     models.Task.date_end,
-                    models.Task.status,
-                    user_alias,
+                    models.Task.cost,
+                    models.Task.status
                     )
-                    .join(user_alias, user_alias.id == models.Task.tutor_id)
+                    .join(tutor_alias, tutor_alias.id == models.Task.tutor_id)
                     .filter(models.Task.student_id == db_student.id)
                     .all())
     return db_tasks
@@ -135,13 +136,13 @@ def get_tasks_by_project(project_id: int, db: Session):
     db_tasks = (db.query(
                     models.Task.id, 
                     models.Task.name, 
-                    models.Task.description,
-                    models.Task.cost,
+                    models.Task.description, 
+                    user_alias.identification, 
+                    user_alias.fullname,                  
                     models.Task.date_start,
                     models.Task.date_end,
-                    models.Task.status,
-                    user_alias,
-                    tutor_alias  
+                    models.Task.cost,
+                    models.Task.status 
                     )
                     .filter(models.Task.project_id == db_project.id)
                     .join(user_alias, user_alias.id == models.Task.student_id)
@@ -170,12 +171,14 @@ def get_tasks_by_tutor(tutor_identification: str, db: Session):
                     models.Task.id, 
                     models.Task.name, 
                     models.Task.description,
+                    student_alias.identification.label('student_indentification'),
+                    student_alias.fullname.label('student_name'),
+                    project_alias.id.label('project_id'),
+                    project_alias.name.label('project_name'), 
                     models.Task.cost,
                     models.Task.date_start,
                     models.Task.date_end,
-                    models.Task.status,
-                    student_alias,
-                    project_alias                 
+                    models.Task.status                                    
                     )
                     .filter(models.Task.tutor_id == db_tutor.id)
                     .join(student_alias, student_alias.id == models.Task.student_id)

@@ -5,6 +5,7 @@ from fastapi.security.api_key import APIKey
 from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.users_schema import User, row_to_schema
+from schemas.other_schemas import UserIdentification
 from db.db import get_db
 from sqlalchemy.orm import Session
 from core import utils
@@ -22,6 +23,19 @@ from db.enums import UserStatusEnum, RoleEnum
 users_router = APIRouter()
 
 # ------------------------------ POST ------------------------------------------------
+@users_router.post('/get_project_info_by_student', tags=['users'])
+def get_project_info_by_student(identification: UserIdentification, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Obtiene información del proyecto donde está inscrito un estudiante
+    """
+    project_info = crud.users.get_project_info_by_student(identification.identification, db)
+    if project_info == None:
+        project_info = {}
+    else:
+        project_info = dict(project_info)
+        project_info['task_list'] = crud.tasks.get_tasks_by_student(project_info['id'], identification.identification, db)
+    return project_info
+
 
 @users_router.post('/create_student', tags=['users'])
 def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
@@ -127,12 +141,19 @@ def update_student_status(identification: str, status: UserStatusEnum, db: Sessi
 
 @users_router.get('/get_students')
 @users_router.get('/get_students/{status}', tags=['users'])
-def get_students(status: Optional[UserStatusEnum] = None, db: Session = Depends(get_db)):
+def get_students(status: Optional[str] = None, db: Session = Depends(get_db)):
     """
     Obtener una lista de estudiantes con los siguientes campos
     Cédula, nombre, apellido, horas, proyecto, fecha de aprobación
     """
-    users = crud.users.get_students(db, status)
+    if status == 'No-asignado':             
+        users = crud.users.get_students_without_project(db)
+    elif status == 'Asignado':
+        users = crud.users.get_students_with_project(db)
+    elif status == 'Aprobado':
+        users = crud.users.get_approved_students(db)
+    else:
+        users = crud.users.get_students_by_status(db, status)
     return users
 
 
@@ -160,7 +181,7 @@ def get_tutors(db: Session = Depends(get_db)):
     """
     Obtiene la lista de tutores
     """
-    users = crud.users.get_users_by_role(RoleEnum.Tutor, db)
+    users = crud.users.get_tutors(db)
     return users
 
 

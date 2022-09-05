@@ -153,6 +153,77 @@ def get_students(db: Session, status: str=None):
                 .all())
     return db_students
 
+def get_approved_students(db: Session):
+    """
+    Obtener una lista de estudiantes con los siguientes campos
+    Cédula, nombre, apellido, horas, estatus, proyecto, fecha de aprobación
+    """
+    filters = [models.User.role == RoleEnum.Student, models.User.status == UserStatusEnum.Approved]
+
+    projects_alias = aliased(models.Project, name='project')
+    career_alias = aliased(models.Career, name='career')
+    db_students = (db.query(
+                    models.User.id,
+                    models.User.identification, 
+                    models.User.first_name, 
+                    models.User.last_name,
+                    career_alias.name.label('career'), 
+                    projects_alias.name.label('project'),
+                    models.User.total_hours, 
+                    models.User.date_approval)
+                .filter(*filters)
+                .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
+                .filter(models.ProjectStudent.active)
+                .outerjoin(projects_alias, projects_alias.id == models.ProjectStudent.project_id)   
+                .outerjoin(career_alias, career_alias.id == models.User.career_id)                
+                .all())
+    return db_students
+
+def get_students_with_project(db: Session):
+    """
+    Obtener una lista de estudiantes con los siguientes campos
+    Cédula, nombre, apellido, horas, estatus, proyecto, fecha de aprobación
+    """
+    filters = [models.User.role == RoleEnum.Student, models.User.status == UserStatusEnum.Active]
+
+    projects_alias = aliased(models.Project, name='project')
+    career_alias = aliased(models.Career, name='career')
+    db_students = (db.query(
+                    models.User.id,
+                    models.User.identification, 
+                    models.User.first_name, 
+                    models.User.last_name,
+                    career_alias.name.label('career'), 
+                    projects_alias.name.label('project'),
+                    models.User.total_hours)
+                .filter(*filters)
+                .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
+                .filter(models.ProjectStudent.active)
+                .outerjoin(projects_alias, projects_alias.id == models.ProjectStudent.project_id)   
+                .outerjoin(career_alias, career_alias.id == models.User.career_id)                
+                .all())
+    return db_students
+
+
+def get_students_by_status(db: Session, status: str):
+    """
+    Obtener una lista de estudiantes activos o inactivos
+    """
+    filters = [models.User.role == RoleEnum.Student, models.User.status == status]
+    career_alias = aliased(models.Career, name='career')
+    db_students = (db.query(
+                    models.User.id,
+                    models.User.identification, 
+                    models.User.first_name, 
+                    models.User.last_name,
+                    career_alias.name.label('career'),
+                    models.User.total_hours
+                    )
+                .filter(*filters)
+                .outerjoin(career_alias, career_alias.id == models.User.career_id)                
+                .all())
+    return db_students
+
 def get_students_without_project(db: Session):
     """
     Obtener una lista de estudiantes que no tienen proyecto activo
@@ -165,13 +236,10 @@ def get_students_without_project(db: Session):
                     models.User.id,
                     models.User.identification, 
                     models.User.first_name, 
-                    models.User.last_name,
-                    models.User.total_hours, 
-                    models.User.status, 
-                    models.User.career_id, 
-                    models.User.date_approval,
-                    func.count(models.ProjectStudent.active),
-                    career_alias
+                    models.User.last_name,                      
+                    career_alias.name.label('career'), 
+                    models.User.total_hours,
+                    func.count(models.ProjectStudent.active)
                 )
                 .filter(*filters)
                 .outerjoin(models.ProjectStudent, models.User.id == models.ProjectStudent.student_id)
@@ -188,8 +256,7 @@ def get_users_by_role(role: str, db: Session):
     """
     db_users = (db.query(models.User.id,
                          models.User.identification, 
-                         models.User.first_name, 
-                         models.User.last_name,
+                         models.User.fullname,
                          models.User.total_hours, 
                          models.User.status, 
                          models.User.role,
@@ -200,9 +267,41 @@ def get_users_by_role(role: str, db: Session):
                 .all())
     return db_users
 
+def get_tutors(db: Session):
+    """
+    Obtiene una lista de usuarios según el rol indicado
+    """
+    career_alias = aliased(models.Career, name='career')
+    db_users = (db.query(models.User.id,
+                         models.User.identification, 
+                         models.User.first_name, 
+                         models.User.last_name,                     
+                         career_alias)
+                    .outerjoin(career_alias, career_alias.id == models.User.career_id)
+                .filter(models.User.role == RoleEnum.Tutor)               
+                .all())
+    return db_users
 
 
 
+def get_project_info_by_student(identification: str, db: Session):
+    """5
+        Busca información del proyecto donde se encuentra inscrito un estudiante    
+    """
+    coordinator = aliased(models.User, name='coordinator')
+    project_info = (db.query(
+                    models.Project.id,
+                    models.Project.name,
+                    models.Project.description, 
+                    models.Project.date_start, 
+                    coordinator.fullname.label('coordinator'))                
+                .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
+                .join(models.User, models.User.id == models.ProjectStudent.student_id)
+                .filter(models.User.identification == identification)
+                .filter(models.ProjectStudent.active)
+                .join(coordinator, coordinator.id == models.Project.coordinator_id)
+                .first())    
+    return project_info
 
 # ------------------------------------------ TOOLS ------------------------------------
 

@@ -192,13 +192,20 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
     Obtiene la lista de estudiantes actualmente inscritos en un proyecto
     """
     filters = []
+    career_alias = aliased(models.Career, name='career')
     if to_approve:
         filters.append(models.User.total_hours >= 120)
-    db_project = (db.query(models.User)
+    db_project = (db.query(models.User.id,
+                    models.User.identification, 
+                    models.User.first_name, 
+                    models.User.last_name,
+                    career_alias.name.label('career'),
+                    models.User.total_hours)
                 .filter(*filters)
                 .join(models.ProjectStudent, models.ProjectStudent.student_id == models.User.id)
                 .filter(models.ProjectStudent.project_id == project_id)
-                .filter(models.ProjectStudent.active == True).all())
+                .filter(models.ProjectStudent.active == True)
+                .outerjoin(career_alias, career_alias.id == models.User.career_id).all())
     return db_project
 
 def get_active_projects(db: Session):
@@ -209,7 +216,6 @@ def get_active_projects(db: Session):
                         models.Project.name, 
                         models.Project.description, 
                         models.Project.date_start,
-                        models.Project.status,
                         func.count( models.ProjectStudent.student_id).label('student_count'))
                         .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
                         .filter(models.Project.status == ProjectStatusEnum.Active and models.ProjectStudent.active == True)
@@ -221,16 +227,34 @@ def get_all_projects(db: Session, status: str=None):
     """
     Obtiene una lista de proyectos
     """
-    filter = []
+    filters = []
     if status:
-        filter = [models.Project.status == status]
+        filters = [models.Project.status == status]
     projects = (db.query(models.Project.id,
                          models.Project.name, 
                          models.Project.description, 
                          models.Project.date_start,
                          models.Project.date_end,
                          models.Project.status)
-                         .filter(*filter)            
+                         .filter(*filters)            
+                ).all()
+    return projects
+
+
+def get_inactive_projects(db: Session):
+    """
+    Obtiene una lista de proyectos
+    """
+    career_alias = aliased(models.Career, name='career')
+    filters = [models.Project.status == ProjectStatusEnum.Inactive]
+    projects = (db.query(models.Project.id,
+                         models.Project.name, 
+                         models.Project.description, 
+                         models.Project.date_start,
+                         models.Project.date_end,
+                         career_alias)
+                         .join(career_alias, career_alias.id == models.Project.career_id)
+                         .filter(*filters)            
                 ).all()
     return projects
 

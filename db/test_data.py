@@ -759,7 +759,7 @@ tasks_json = [
         'status' : 'Pendiente',
         'student_id' : 15,
         'project_id' : 5,
-        'tutor_id' : 21
+        'tutor_id' : 22
     },
     {
         'name' : 'Tarea 44',
@@ -768,7 +768,7 @@ tasks_json = [
         'status' : 'Pendiente',
         'student_id' : 15,
         'project_id' : 5,
-        'tutor_id' : 21
+        'tutor_id' : 22
     },
     {
         'name' : 'Tarea 45',
@@ -777,7 +777,7 @@ tasks_json = [
         'status' : 'Inactiva',
         'student_id' : 15,
         'project_id' : 5,
-        'tutor_id' : 21
+        'tutor_id' : 22
     },
     {
         'name' : 'Tarea 46',
@@ -1028,6 +1028,37 @@ project_student_json = [
 
 ]
 
+inactive_students_json = [
+    {
+        'identification' : 'V-26000037',
+        'first_name' : 'Nombre Estudiante 37',
+        'last_name' : 'Apellido Estudiante 37',    
+        'career_id' : 1,  
+        'role' : 'Estudiante',
+        'status': 'Inactivo',
+        'id' : 37
+    },
+    {
+        'identification' : 'V-26000038',
+        'first_name' : 'Nombre Estudiante 38',
+        'last_name' : 'Apellido Estudiante 38',    
+        'career_id' : 3,
+        'role' : 'Estudiante',
+        'status': 'Inactivo',
+        'id' : 38
+    },
+    {
+        'identification' : 'V-26000039',
+        'first_name' : 'Nombre Estudiante 39',
+        'last_name' : 'Apellido Estudiante 39',    
+        'career_id' : 5,
+        'role' : 'Estudiante',
+        'status': 'Inactivo',
+        'id' : 39
+    }
+]
+
+
 
 
 def populate_students():
@@ -1138,6 +1169,22 @@ def populate_tasks():
         except Exception as e:
             db.rollback()
 
+def populate_inactive_students():
+    for student in inactive_students_json:
+        new_student = models.User(
+            identification=student['identification'],
+            first_name=student['first_name'],
+            last_name=student['last_name'],            
+            role = 'Estudiante',
+            career_id = student['career_id'],
+            status = student['status']
+        )  
+        try:
+            db.add(new_student)
+            db.commit()        
+        except Exception as e:
+            print(e)
+            db.rollback()
 
 def populate_db():
     populate_students()
@@ -1147,5 +1194,6 @@ def populate_db():
     populate_inactive_projects()
     populate_projects_students()
     populate_tasks()
+    populate_inactive_students()
 
 
