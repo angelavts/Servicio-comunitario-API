@@ -8,6 +8,7 @@ from typing import List
 from core.messages import messages
 from datetime import datetime
 from db.enums import TaskStatusEnum, UserStatusEnum
+import crud
 
 # ------------------------------------------ TOOLS -------------------------------------------
 
@@ -98,27 +99,33 @@ def update_task_status(task_id: int, status: str, db: Session):
 
 
 
-def get_tasks_by_student(project_id: int, student_identification: str, db: Session):
+def get_tasks_by_student(student_identification: str, db: Session):
 
     # buscar el id del estudiante
     db_student = get_user_by_identification(student_identification, 'student_not_exists', db)
 
     tutor_alias = aliased(models.User, name='tutor')
+    # buscar el proyecto que tiene activo el estudiante
+    project = crud.projects.get_active_project_by_student_id(db_student.id, db)
 
-    db_tasks = (db.query(
-                    models.Task.id, 
-                    models.Task.name, 
-                    models.Task.description,  
-                    tutor_alias.identification.label('tutor_indentification'), 
-                    tutor_alias.fullname.label('tutor_name'),                  
-                    models.Task.date_start,
-                    models.Task.date_end,
-                    models.Task.cost,
-                    models.Task.status
-                    )
-                    .join(tutor_alias, tutor_alias.id == models.Task.tutor_id)
-                    .filter(models.Task.student_id == db_student.id)
-                    .all())
+    db_tasks = []
+    if project != None:
+
+        db_tasks = (db.query(
+                        models.Task.id, 
+                        models.Task.name, 
+                        models.Task.description,  
+                        tutor_alias.identification.label('tutor_indentification'), 
+                        tutor_alias.fullname.label('tutor_name'),                  
+                        models.Task.date_start,
+                        models.Task.date_end,
+                        models.Task.cost,
+                        models.Task.status
+                        )
+                        .join(tutor_alias, tutor_alias.id == models.Task.tutor_id)
+                        .filter(models.Task.student_id == db_student.id)
+                        .filter(models.Task.project_id == project.id)
+                        .all())
     return db_tasks
 
 def get_tasks_by_project(project_id: int, db: Session):

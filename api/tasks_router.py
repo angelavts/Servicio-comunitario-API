@@ -31,12 +31,12 @@ def create_task(task: Task, db: Session = Depends(get_db)):
     task = crud.tasks.create(task, db)
     return responses.TASK_CREATED_SUCCESS
 
-@tasks_router.post('/get_student_tasks/{project_id}', tags=['tasks'])
-def get_student_tasks(project_id: int, student_identification: UserIdentification, db: Session = Depends(get_db)):
+@tasks_router.post('/get_student_tasks', tags=['tasks'])
+def get_student_tasks(student_identification: UserIdentification, db: Session = Depends(get_db)):
     """
     Obtener la lista de tareas de un estudiante en un proyecto especifico
     """
-    tasks = crud.tasks.get_tasks_by_student(project_id, student_identification.identification, db)
+    tasks = crud.tasks.get_tasks_by_student(student_identification.identification, db)
     return tasks
 
 

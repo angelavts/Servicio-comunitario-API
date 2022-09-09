@@ -13,6 +13,7 @@ messages = {
     'project_not_exists' : 'Project not found',
     'coordinator_not_exists' : 'Coordinator not found',
     'career_not_exists' : 'Career not found',
-    'project_exists': 'Project already exists'
+    'project_exists': 'Project already exists',
+    'incorrect_status': 'Incorrect status'
 
 }

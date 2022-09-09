@@ -1,11 +1,11 @@
 import crud
 import openpyxl
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Header
 from fastapi.security.api_key import APIKey
 from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.users_schema import User, row_to_schema
-from schemas.other_schemas import UserIdentification
+from schemas.other_schemas import UserIdentification, IdList
 from db.db import get_db
 from sqlalchemy.orm import Session
 from core import utils
@@ -13,7 +13,7 @@ from core import responses
 from core.config import settings
 from core.messages import messages
 from core import auth
-from typing import List, Optional
+from typing import List, Optional, Union
 from db.enums import UserStatusEnum, RoleEnum
 
 
@@ -24,21 +24,34 @@ users_router = APIRouter()
 
 # ------------------------------ POST ------------------------------------------------
 @users_router.post('/get_project_info_by_student', tags=['users'])
-def get_project_info_by_student(identification: UserIdentification, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def get_project_info_by_student(identification: UserIdentification, db: Session = Depends(get_db), 
+    api_key: APIKey = Depends(auth.get_api_key)):
     """
     Obtiene información del proyecto donde está inscrito un estudiante
     """
+    # token = request.headers.get('Authorization')
+    print(authorization)
     project_info = crud.users.get_project_info_by_student(identification.identification, db)
     if project_info == None:
         project_info = {}
     else:
         project_info = dict(project_info)
-        project_info['task_list'] = crud.tasks.get_tasks_by_student(project_info['id'], identification.identification, db)
+        project_info['task_list'] = crud.tasks.get_tasks_by_student(identification.identification, db)
     return project_info
+    
+
+@users_router.post('/get_user', tags=['users'])
+def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
+    """
+    Obtiene los datos de un usuario a partir de la cédula
+    """
+    user = crud.users.get_user_by_identification(identification.identification, db)
+    return user
 
 
 @users_router.post('/create_student', tags=['users'])
-def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
+    authorization: Union[str, None] = Header(default=None)):
     """
     Crear un estudiante
     """
@@ -129,12 +142,21 @@ def update_user(user: User, identification: str, db: Session = Depends(get_db), 
     return responses.USER_UPDATED_SUCCESS
 
 
-@users_router.put('/update_student_status/{identification}/{status}', tags=['users'])
-def update_student_status(identification: str, status: UserStatusEnum, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+@users_router.put('/update_student_status/{status}', tags=['users'])
+def update_student_status(identification: UserIdentification, status: UserStatusEnum, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Actualiza el estatus de un estudiante
     """
-    users = crud.users.update_student_status(identification, status, db)
+    users = crud.users.update_student_status(identification.identification, status, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
+@users_router.put('/update_students_status/{status}', tags=['users'])
+def update_students_status(id_list: IdList, status: UserStatusEnum, db: Session = Depends(get_db)):
+    """
+    
+    """
+    crud.users.update_students_status(id_list.id_list, UserStatusEnum.Approved, db)
     return responses.USER_UPDATED_SUCCESS
 
 # ------------------------------ GET ------------------------------------------------
@@ -146,15 +168,21 @@ def get_students(status: Optional[str] = None, db: Session = Depends(get_db)):
     Obtener una lista de estudiantes con los siguientes campos
     Cédula, nombre, apellido, horas, proyecto, fecha de aprobación
     """
-    if status == 'No-asignado':             
+    if status == None:
+        users = crud.users.get_students(db)
+    elif status == 'No-asignado':             
         users = crud.users.get_students_without_project(db)
     elif status == 'Asignado':
         users = crud.users.get_students_with_project(db)
     elif status == 'Aprobado':
         users = crud.users.get_approved_students(db)
-    else:
+    elif status == 'Activo' or status == 'Inactivo':
         users = crud.users.get_students_by_status(db, status)
+    else:
+        raise HTTPException(status_code=400, detail=messages['incorrect_status'])
     return users
+
+
 
 
 @users_router.get('/get_students_without_project', tags=['users'])
@@ -167,13 +195,7 @@ def get_students_without_project(db: Session = Depends(get_db)):
     return users
 
 
-@users_router.get('/get_user/{identification}', tags=['users'])
-def get_user(identification: str, db: Session = Depends(get_db)):
-    """
-    Obtiene los datos de un usuario a partir de la cédula
-    """
-    user = crud.users.get_user_by_identification(identification, db)
-    return user
+
 
 
 @users_router.get('/get_tutors', tags=['users'])

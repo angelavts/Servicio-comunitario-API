@@ -12,6 +12,8 @@ class User(Base):
     first_name = Column(String(100), nullable=False)
     last_name = Column(String(300), nullable=False)   
     fullname = column_property(first_name + " " + last_name) 
+    email = Column(String(100), nullable=True)  
+    phone = Column(String(20), nullable=True)  
     career_id = Column(Integer(), ForeignKey('careers.id'), nullable=True)
     total_hours = Column(Integer(), nullable=True)
     role = Column(role_enum, nullable=False)

@@ -2,7 +2,7 @@ from db import db_models as models
 from db.enums import RoleEnum, UserStatusEnum
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import aliased 
 from fastapi import status, HTTPException
 from typing import List
 from core import utils
@@ -99,6 +99,18 @@ def update_student_status(identification: str, status: str, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return db_user
 
+
+def update_students_status(id_list: list, status: str, db: Session):
+    """
+        Actualiza el status de varios estudiantes 
+    """
+    try:
+        db.query(models.User).filter(models.User.id.in_(id_list)).update({'status': status})
+        db.commit() 
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+
 # ------------------------------------------ GET ------------------------------------
 
 
@@ -114,7 +126,8 @@ def get_user_by_identification(identification: str, db: Session):
                     models.User.total_hours, 
                     models.User.status,
                     models.User.date_approval,   
-                    models.User.career_id,                      
+                    models.User.email,   
+                    models.User.phone,                   
                     models.Career.name.label('career_name'))
                 .outerjoin(models.Career, models.Career.id == models.User.career_id)
                 .filter(models.User.identification == identification).first())
@@ -276,7 +289,7 @@ def get_tutors(db: Session):
                          models.User.identification, 
                          models.User.first_name, 
                          models.User.last_name,                     
-                         career_alias)
+                         career_alias.name)
                     .outerjoin(career_alias, career_alias.id == models.User.career_id)
                 .filter(models.User.role == RoleEnum.Tutor)               
                 .all())
@@ -302,6 +315,7 @@ def get_project_info_by_student(identification: str, db: Session):
                 .join(coordinator, coordinator.id == models.Project.coordinator_id)
                 .first())    
     return project_info
+
 
 # ------------------------------------------ TOOLS ------------------------------------
 

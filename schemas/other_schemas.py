@@ -8,3 +8,9 @@ class UserIdentification(BaseModel):
 
     class Config:
         orm_mode = True
+
+class IdList(BaseModel):
+    id_list: List[int] 
+
+    class Config:
+        orm_mode = True
