@@ -2,46 +2,49 @@ from db import db_models as models
 from schemas.projects_schema import Project
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
-from sqlalchemy.orm import aliased
 from fastapi import status, HTTPException
 from typing import List
 from core.messages import messages
 from datetime import datetime
-from db.enums import ProjectStatusEnum
+from db.enums import ProjectStatusEnum, RoleEnum
 from sqlalchemy import func
+import crud.users_crud as users
 
 
 
 # --------------------------------------------- TOOLS ------------------------------------------------------------
-def get_user_from_identification(identification: str, error_message: str, db: Session):
+def get_user_from_identification(identification: str, db: Session):
     # buscar el id del coordinador 
     db_user =  db.query(models.User).filter(models.User.identification == identification).first()
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail=messages[error_message])
-    
     return db_user
 
 def get_career_from_name(name: str, error_message: str, db: Session):
     # buscar el id de la carrera 
-    db_user =  db.query(models.Career).filter(models.Career.name == name).first()
-
-    if db_user is None:
+    db_career =  db.query(models.Career).filter(models.Career.name == name).first()
+    if db_career is None:
         raise HTTPException(status_code=400, detail=messages[error_message])
-    
-    return db_user
+    return db_career
 
+def create_new_coordinator(project: Project, db: Session):
+    # Crea un nuevo coordinador
+    new_user = User(
+            identification = project.coordinator_identification,
+            first_name = project.coordinator_first_name,
+            last_name = project.coordinator_last_name,
+            career = project.coordinator_career
+        ) 
+    return users.create_user(new_user, RoleEnum.Coordinator, db)
 
 # --------------------------------------------- POST ------------------------------------------------------------
-
 def create(project: Project, db: Session):
     """
     Crea un proyecto 
     """
-
     # buscar el id del coordinador
-    coordinator = get_user_from_identification(project.coordinator_identification, 'coordinator_not_exists', db)
-
+    coordinator = get_user_from_identification(project.coordinator_identification, db)
+    if coordinator is None:          
+        coordinator = create_new_coordinator(project, db)
+    
     # buscar el id de la carrera
     career = get_career_from_name(project.career, 'career_not_exists', db)
 
@@ -52,7 +55,6 @@ def create(project: Project, db: Session):
     if db_task is not None:
         raise HTTPException(status_code=400, detail=messages['project_exists'])
 
-
     new_project = models.Project(
         name=project.name,
         description=project.description,
@@ -60,7 +62,6 @@ def create(project: Project, db: Session):
         coordinator_id = coordinator.id,
         career_id = career.id,
     ) 
-
     try:
         db.add(new_project)
         db.commit()        
@@ -69,6 +70,22 @@ def create(project: Project, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return new_project
 
+def create_projects_from_list(projects: List[Project], db: Session):
+    """
+    Crear usuarios a partir de una lista
+    """
+    response = {}
+    successful = []
+    failed = []
+    for project in projects:
+        try:
+            new_project = create(project, db)
+            successful.append(new_project)
+        except Exception as e:
+            failed.append({'Project': new_project, 'detail': str(e)})
+    response['successful'] = successful
+    response['failed'] = failed        
+    return response
 
 # --------------------------------------------- UPDATE ------------------------------------------------------------
 def update_project_status(project_id: int, status: str, db: Session):
@@ -115,24 +132,40 @@ def update_project_date_end(project_id: int, date: datetime, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return project
 
-
 # --------------------------------------------- GET ------------------------------------------------------------
-
+def get_projects_by_status(status: str, db: Session):
+    """
+    Obtiene una lista de proyectos por estatus
+    """
+    projects = (db.query(models.Project.id,
+                         models.Project.name, 
+                         models.Project.date_start, 
+                         models.Project.date_end,
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
+                         .join(models.User, models.User.id == models.Project.coordinator_id)
+                         .join(models.Career, models.Career.id == models.Project.career_id)
+                         .filter(models.Project.status == status)               
+                ).all()
+    return projects
 
 def get_projects_by_coordinator_status(coordinator_id: int, status: str, db: Session):
     """
     Obtiene una lista de proyectos de un coordinador especifico por status
     """
-    user_alias = aliased(models.User, name='coordinator')
-    career_alias = aliased(models.Career, name='career')
+
     projects = (db.query(models.Project.id,
                          models.Project.name, 
                          models.Project.date_start, 
                          models.Project.date_end,
-                         user_alias, 
-                         career_alias)
-                         .join(user_alias, user_alias.id == models.Project.coordinator_id)
-                         .join(career_alias, career_alias.id == models.Project.career_id)
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
+                         .join(models.User, models.User.id == models.Project.coordinator_id)
+                         .join(models.Career, models.Career.id == models.Project.career_id)
                          .filter(models.Project.coordinator_id == coordinator_id and models.Project.status == status)               
                 ).all()
     return projects
@@ -142,16 +175,16 @@ def get_projects_by_career_status(career_id: int, status: str, db: Session):
     Obtiene una lista de proyectos de una carrera especifica por status
     """
 
-    user_alias = aliased(models.User, name='coordinator')
-    career_alias = aliased(models.Career, name='career')
     projects = (db.query(models.Project.id,
                          models.Project.name, 
                          models.Project.date_start, 
                          models.Project.date_end,
-                         user_alias, 
-                         career_alias)
-                         .join(user_alias, user_alias.id == models.Project.coordinator_id)
-                         .join(career_alias, career_alias.id == models.Project.career_id)
+                         models.User.id.label('coordinator_id'),
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
+                         .join(models.User, models.User.id == models.Project.coordinator_id)
+                         .join(models.Career, models.Career.id == models.Project.career_id)
                          .filter(models.Project.career_id == career_id and models.Project.status == status)               
                 ).all()
     return projects
@@ -160,19 +193,20 @@ def get_project(project_id: int, db: Session):
     """
     Obtiene un proyecto
     """
-    user_alias = aliased(models.User, name='coordinator')
-    career_alias = aliased(models.Career, name='career')
     projects = (db.query(models.Project.id,
                          models.Project.name, 
                          models.Project.description,
                          models.Project.date_start, 
                          models.Project.date_end,
                          models.Project.status,
-                         user_alias, 
-                         career_alias)
+                         models.User.id.label('coordinator_id'), 
+                         models.User.identification.label('coordinator_identification'), 
+                         models.User.first_name.label('coordinator_first_name'), 
+                         models.User.last_name.label('coordinator_last_name'), 
+                         models.Career.name.label('career_name'))
                          .filter(models.Project.id == project_id)    
-                         .join(user_alias, user_alias.id == models.Project.coordinator_id)
-                         .join(career_alias, career_alias.id == models.Project.career_id)
+                         .join(models.User, models.User.id == models.Project.coordinator_id)
+                         .join(models.Career, models.Career.id == models.Project.career_id)
                                     
                 ).first()
     return projects
@@ -192,20 +226,13 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
     Obtiene la lista de estudiantes actualmente inscritos en un proyecto
     """
     filters = []
-    career_alias = aliased(models.Career, name='career')
     if to_approve:
         filters.append(models.User.total_hours >= 120)
-    db_project = (db.query(models.User.id,
-                    models.User.identification, 
-                    models.User.first_name, 
-                    models.User.last_name,
-                    career_alias.name.label('career'),
-                    models.User.total_hours)
+    db_project = (db.query(models.User)
                 .filter(*filters)
                 .join(models.ProjectStudent, models.ProjectStudent.student_id == models.User.id)
                 .filter(models.ProjectStudent.project_id == project_id)
-                .filter(models.ProjectStudent.active == True)
-                .outerjoin(career_alias, career_alias.id == models.User.career_id).all())
+                .filter(models.ProjectStudent.active == True).all())
     return db_project
 
 def get_active_projects(db: Session):
@@ -213,13 +240,14 @@ def get_active_projects(db: Session):
     Obtiene una lista de proyectos activos
     """
     projects = (db.query(models.Project.id,
-                        models.Project.name, 
-                        models.Project.description, 
-                        models.Project.date_start,
+                         models.Project.name, 
+                         models.Project.description, 
+                         models.Project.date_start,
+                         models.Project.status,
                         func.count( models.ProjectStudent.student_id).label('student_count'))
-                        .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
-                        .filter(models.Project.status == ProjectStatusEnum.Active and models.ProjectStudent.active == True)
-                        .group_by(models.Project.id)              
+                         .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
+                         .filter(models.Project.status == ProjectStatusEnum.Active and models.ProjectStudent.active == True)
+                         .group_by(models.Project.id)              
                 ).all()
     return projects
 
@@ -227,34 +255,16 @@ def get_all_projects(db: Session, status: str=None):
     """
     Obtiene una lista de proyectos
     """
-    filters = []
+    filter = []
     if status:
-        filters = [models.Project.status == status]
+        filter = [models.Project.status == status]
     projects = (db.query(models.Project.id,
                          models.Project.name, 
                          models.Project.description, 
                          models.Project.date_start,
                          models.Project.date_end,
                          models.Project.status)
-                         .filter(*filters)            
-                ).all()
-    return projects
-
-
-def get_inactive_projects(db: Session):
-    """
-    Obtiene una lista de proyectos
-    """
-    career_alias = aliased(models.Career, name='career')
-    filters = [models.Project.status == ProjectStatusEnum.Inactive]
-    projects = (db.query(models.Project.id,
-                         models.Project.name, 
-                         models.Project.description, 
-                         models.Project.date_start,
-                         models.Project.date_end,
-                         career_alias)
-                         .join(career_alias, career_alias.id == models.Project.career_id)
-                         .filter(*filters)            
+                         .filter(*filter)            
                 ).all()
     return projects
 

@@ -3,7 +3,7 @@ import openpyxl
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from os import getcwd
-from schemas.projects_schema import Project
+from schemas.projects_schema import Project, row_to_schema
 from db.db import get_db
 from db.enums import ProjectStatusEnum
 from sqlalchemy.orm import Session
@@ -11,12 +11,14 @@ from core import utils
 from core import responses
 from core.config import settings
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+from fastapi.security.api_key import APIKey
+from core.messages import messages
+from core import auth
 
 # crear router
 
 projects_router = APIRouter()
-
 
 # crear un proyecto
 @projects_router.post('/create_project', tags=['projects'])
@@ -45,6 +47,14 @@ def update_project_date_end(project_id: int, date: datetime, db: Session = Depen
     return responses.PROJECT_UPDATED_SUCCESS
 
 # obtener proyectos
+@projects_router.get('/get_projects_by_status/{status}', tags=['projects'])
+def get_projects_by_status(status: ProjectStatusEnum, db: Session = Depends(get_db)):
+    """
+    get project list by status
+    """
+    projects = crud.projects.get_projects_by_status(status, db)
+    return projects
+
 @projects_router.get('/get_projects_by_coordinator_status/{status}/{coordinator}', tags=['projects'])
 def get_projects_by_coordinator_status(coordinator_id: int, status: ProjectStatusEnum, db: Session = Depends(get_db)):
     """
@@ -99,13 +109,13 @@ def get_students_to_approval(project_id: int, db: Session = Depends(get_db)):
 @projects_router.get('/get_active_projects', tags=['projects'])
 def get_active_projects(db: Session = Depends(get_db)):
     """
-    Obtiene una lista de proyectos activos
+    get a list of active projects
     """
     projects = crud.projects.get_active_projects(db)
     return projects
 
 @projects_router.get('/get_all_projects')
-@projects_router.get('/get_all_projects/{status}', tags=['projects'])
+@projects_router.get('/get_all_projects/by_status/{status}', tags=['projects'])
 def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = Depends(get_db)):
     """
     Obtiene una lista de proyectos
@@ -113,10 +123,29 @@ def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = D
     projects = crud.projects.get_all_projects(db, status)
     return projects
 
-@projects_router.get('/get_inactive_projects')
-def get_all_projects(db: Session = Depends(get_db)):
+
+@projects_router.post('/create_projects_from_file', tags=['projects'])
+async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
+                    , api_key: APIKey = Depends(auth.get_api_key)):
     """
-    Obtiene una lista de proyectos
+    Crea proyectos a partir de un archivo
     """
-    projects = crud.projects.get_inactive_projects(db)
-    return projects
+    if not utils.is_valid_file(file.filename):
+        raise HTTPException(400, detail=messages['invalid_document_type']) 
+    # save file
+    upload_path = utils.get_upload_path(file.filename)
+    with open(upload_path, 'wb') as myfile:
+        content = await file.read()
+        myfile.write(content)
+        myfile.close()
+    schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, settings.PROJECTS_FILE_FORMAT)
+    response = crud.projects.create_projects_from_list(schema_list, db)
+    return response
+
+@projects_router.post('/create_projects', tags=['projects'])
+def create_projects(projects: List[Project], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Crear proyectos a partir de una lista
+    """
+    response = crud.projects.create_projects_from_list(projects, db)
+    return response

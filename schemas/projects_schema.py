@@ -24,7 +24,7 @@ def row_to_schema(row: list):
             career=str(row[3]),
             coordinator_identification=str(row[4]),
             coordinator_first_name=str(row[5]),
-            carcoordinator_last_nameeer=str(row[6]),
+            coordinator_last_name=str(row[6]),
             coordinator_career=str(row[7]),
     )
     return new_user
