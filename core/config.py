@@ -3,6 +3,7 @@ from os import path
 from pydantic import BaseSettings
 from sqlalchemy.engine.url import URL
 
+
 # PENDIENTE: DEFINIR LAS VARIABLES EN UN .ENV
 # os.getenv("NOMBRE_VARIABLE", "nombre_archivo")
 class Settings(BaseSettings):
@@ -26,11 +27,12 @@ class Settings(BaseSettings):
     USERS_FILE_FORMAT = ['CÉDULA', 'NOMBRE', 'APELLIDO', 'CARRERA']
     PROJECTS_FILE_FORMAT = ['NOMBRE', 'DESCRIPCIÓN', 'FECHA INICIO', 'CARRERA', 'NOMBRE COORDINADOR',
                             'APELLLIDO COORDINADOR', 'CÉDULA COORDINADOR', 'CARRERA COORDINADOR']
-    API_KEYS = ['eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZHVyYW4iLCJyb2xlcyI6IlJPTEVfR09EIiwiZXhwIjoxNjYxOTYyODQ2LCJpYXQiOjE2NjE5NTcwODZ9.qGeESQPLr64BzFrNYXmppSIXmUVADFbiA4niJZf38SkHGQzcalmHp2C44971G2dnpTRO3qcuitaVeab2p8YWEw']
+    API_KEYS = ['3d14ce20-9c09-46a1-bc6a-a226b08b227b']
     ORIGINS = [
             "http://localhost",
             "http://localhost:4200",
         ]
-
+    AUTH_SERVICE_URL = "http://127.0.0.1:8000"
+    CURRENT_TOKEN = ""
 
 settings = Settings()

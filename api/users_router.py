@@ -15,7 +15,7 @@ from core.messages import messages
 from core import auth
 from typing import List, Optional, Union
 from db.enums import UserStatusEnum, RoleEnum
-
+from api import requests
 
 
 # crear router
@@ -23,6 +23,15 @@ from db.enums import UserStatusEnum, RoleEnum
 users_router = APIRouter()
 
 # ------------------------------ POST ------------------------------------------------
+@users_router.post('/login', tags=['users'])
+def login():
+    """
+    Inicia sesión y obtiene el token del servicio de autenticación
+    """
+    response = requests.login()
+    return response
+
+
 @users_router.post('/get_project_info_by_student', tags=['users'])
 def get_project_info_by_student(identification: UserIdentification, db: Session = Depends(get_db), 
     api_key: APIKey = Depends(auth.get_api_key)):
@@ -51,11 +60,12 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
 
 @users_router.post('/create_student', tags=['users'])
 def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
-    authorization: Union[str, None] = Header(default=None)):
+    authorization: str = Header(default=None)):
     """
     Crear un estudiante
     """
     user_response = crud.users.create_user(user, RoleEnum.Student, db)
+    
     return responses.USER_CREATED_SUCCESS
 
 
@@ -65,7 +75,9 @@ def create_students(users: List[User], db: Session = Depends(get_db), api_key: A
     """
     Crear estudiantes a partir de una lista
     """
-    response = crud.users.create_users_from_list(users, RoleEnum.Student, db)
+    response = requests.create_users(users, RoleEnum.Student, '1|Z4XfrcGLGsvEbCklqTy9HApkgDV6rITC3Ckw2eTp')
+    print(response)
+    # response = crud.users.create_users_from_list(users, RoleEnum.Student, db)
     return response
 
 
