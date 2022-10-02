@@ -5,6 +5,29 @@ from typing import List
 from core.config import settings
 from db.enums import UserStatusEnum, RoleEnum
 from core.config import settings
+from core import utils
+
+def create_user(user: User, role: str, token: str):
+    new_user = {
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "identification": user.identification,
+            "role": role
+        }
+    # definir header para el request
+    headers = {
+        'Authorization': token 
+    } 
+    url = f'{settings.AUTH_SERVICE_URL}/api/register'
+    response = requests.post(url, json=new_user, headers=headers)
+    # response.raise_for_status()
+    try:
+        response = response.json()
+    except Exception as e:
+        print(e)
+        response = {'status_code': response.status_code}
+    return response
 
 
 def create_users(users: List[User], role: str, token: str):
@@ -16,7 +39,7 @@ def create_users(users: List[User], role: str, token: str):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "email": user.email,
-                "identification": user.identification,
+                "identification": utils.format_identication(user.identification),
                 "role": role
             }
         users_list.append(new_user)

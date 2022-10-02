@@ -81,13 +81,14 @@ def is_valid_identication(identification: str):
 
 
 
-def validate_and_convert_identication(identification: str):
+def format_identication(identification: str):
     """
-        Verifica que una cédula tenga el siguiente formato: V-0000000 o E-0000000
+        Verifica que una cédula tenga el siguiente formato: V-0000000 o E-0000000, en caso de
+        no tenerlo, formatea la cédula a ese formato. Si no es posible formatear, devuelve None
     """
     # quitar puntos, si los tiene
     new_identification = identification.replace('.', '').replace(' ', '').upper()  
-    return_identification = None
+    return_identification = identification
     if len(new_identification) > 1:
         # Verificar que inicie con 'V' o 'E'
         if new_identification[0] == 'V' or  new_identification[0] == 'E':

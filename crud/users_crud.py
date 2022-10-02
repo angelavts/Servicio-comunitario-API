@@ -1,3 +1,4 @@
+import pandas as pd
 from db import db_models as models
 from db.enums import RoleEnum, UserStatusEnum
 from schemas.users_schema import User
@@ -10,9 +11,23 @@ from core.messages import messages
 from datetime import datetime
 from sqlalchemy import any_, exists, func, case
 from itertools import groupby
-
+from api import requests
 
 # ------------------------------------------ POST ------------------------------------
+def create_user_with_username(user: User, role: str, db: Session):
+    """
+    Crea un usuario 
+    """    
+    db_user = db.query(models.User).filter(models.User.identification == user.identification).first()
+    if db_user is not None:
+        raise HTTPException(status_code=400, detail=messages['user_exists'])
+    new_user = build_new_user(user, role, db) 
+    try:
+        db.add(new_user)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPEx
 
 def create_user(user: User, role: str, db: Session):
     """
@@ -29,6 +44,45 @@ def create_user(user: User, role: str, db: Session):
         db.rollback()
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return new_user
+
+def create_user_with_username(user: User, role: str, db: Session, token: str):
+    """
+    Crear un estudiante con usuario en autenticación
+    """
+    # dar formato a la cédula obtenida
+    user.identification = utils.format_identication(user.identification)
+    # registrar el usuario en el servicio de autenticación
+    response = requests.create_user(user, RoleEnum.Student, token)
+    username = None
+    # tratar de obtener el username 
+    try:
+        username = response['username']
+    except Exception as e:
+        print(e)
+    if username != None:
+        # en caso de que exista el username, se procede a registrar el usuario
+        new_user = create_user(user, RoleEnum.Student, db)
+        # si el registro es exitoso, se convierte la respuesta en diccionario y se agrega el username
+        response = {
+            "first_name": new_user.first_name,
+            "last_name": new_user.last_name,
+            "email": new_user.email,
+            "identification": new_user.identification,
+            "username": username
+        }
+    else:      
+        print(response) 
+        message = "" 
+        try:
+            # no existe username, significa que hay un error en autenticación
+            # tratar de enviar error con el mensaje de error de autenticación
+            message = response['message']
+        except Exception as e:
+            print(e) 
+            message = messages['internal_error']  
+        raise HTTPException(status_code=500, detail=message)
+    return response
+
     
 def create_users_from_list(users: List[User], role: str, db: Session):
     """
@@ -53,6 +107,59 @@ def create_users_from_list(users: List[User], role: str, db: Session):
 
     response['successful'] = successful
     response['failed'] = failed        
+    return response
+
+def create_users_with_username(users: List[User], role: str, db: Session, token: str):
+    """
+    Crear usuarios a partir de una lista, también se registrarán en autenticación
+    """
+    response = requests.create_users(users, role, token)
+    # intentar extraer la lista de usuarios
+    auth_list = []
+    try:
+        auth_list = response['users']
+    except Exception as e:
+        print(e)
+        # si no se tiene la lista de usuarios es porque no se registró ninguno
+        response = {
+            "successful": [],
+            "failed": users
+        }
+
+    if auth_list:
+        # ya que se tiene una lista de usuarios registrados en autenticación
+        # se procede a hacer el registro en la base de datos
+        successful = []
+        failed = []
+        # convertir la lista de usuarios registrados en un dataframe
+        df_users = pd.DataFrame.from_records(auth_list)
+        # recorrer la lista de usuarios que se pudieron registrar en autenticación
+        for user in users:
+            # buscar este usuario en el dataframe
+            user_data = df_users[df_users['identification'] == user.identification]
+            if not user_data.empty:
+                # si existe el usuario, es porque se pudo registrar en autenticación, se
+                # procede a registrar el usuario en la bd
+                new_user = build_new_user(user, role, db)
+                try:
+                    db.add(new_user)
+                    db.commit()
+                    # se agrega el usuario a la lista de exitodos y
+                    # se incluye el username obtenido de autenticación
+                    response_user = user.dict()
+                    response_user['username'] = user_data['username'].values[0]
+                    successful.append(response_user)
+                except Exception as e:
+                    db.rollback()
+                    failed.append(user)
+            else:
+                # si no se registró el usuario en autenticación,
+                # se devuelven sus datos en la lista de fallidos
+                failed.append(user)
+        response = {
+            'successful' : successful,
+            'failed' : failed 
+        }      
     return response
 
 # ------------------------------------------ UPDATE ------------------------------------
@@ -113,8 +220,25 @@ def update_students_status(id_list: list, status: str, db: Session):
 
 # ------------------------------------------ GET ------------------------------------
 
+def is_user_in_db(identification: str, db: Session):
+    """
+    Verifica si el usuario existe en la base de datos
+    """
+    # buscar el id del usuario
+    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
+    return db_user != None
+
 
 def get_user_by_identification(identification: str, db: Session):
+    """
+    Verifica si el usuario existe en la base de datos
+    """
+    # buscar el id del usuario
+    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
+    return db_user
+
+
+def get_user_info_by_identification(identification: str, db: Session):
     """
     Obtiene un usuario a partir de la cédula
     """
@@ -328,7 +452,9 @@ def build_new_user(user: User, role: str, db: Session):
         first_name=user.first_name,
         last_name=user.last_name,            
         role = role,
-        career_id = db_career.id
+        career_id = db_career.id if db_career != None else None,
+        email = user.email,
+        phone = user.phone
     )  
     return new_user
 

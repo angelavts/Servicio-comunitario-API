@@ -33,6 +33,6 @@ class Settings(BaseSettings):
             "http://localhost:4200",
         ]
     AUTH_SERVICE_URL = "http://127.0.0.1:8000"
-    CURRENT_TOKEN = ""
+    CURRENT_TOKEN = "2|mtr1m8nh3CWcYkbsjYYavAzUVSC5Coo38W8mifym"
 
 settings = Settings()

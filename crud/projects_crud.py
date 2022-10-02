@@ -8,22 +8,28 @@ from core.messages import messages
 from datetime import datetime
 from db.enums import ProjectStatusEnum, RoleEnum
 from sqlalchemy import func
-import crud.users_crud as users
+import crud.users_crud as users_crud
 
 
 
 # --------------------------------------------- TOOLS ------------------------------------------------------------
-def get_user_from_identification(identification: str, db: Session):
-    # buscar el id del coordinador 
-    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
+def get_project_by_id(project_id: str, error_message: str, db: Session):
+    # buscar el id del estudiante
+    db_user =  db.query(models.Project).filter(models.Project.id == project_id).first()
+
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages[error_message])
+    
     return db_user
 
-def get_career_from_name(name: str, error_message: str, db: Session):
+
+def get_career_by_name(name: str, error_message: str, db: Session):
     # buscar el id de la carrera 
     db_career =  db.query(models.Career).filter(models.Career.name == name).first()
     if db_career is None:
         raise HTTPException(status_code=400, detail=messages[error_message])
     return db_career
+
 
 def create_new_coordinator(project: Project, db: Session):
     # Crea un nuevo coordinador
@@ -33,7 +39,7 @@ def create_new_coordinator(project: Project, db: Session):
             last_name = project.coordinator_last_name,
             career = project.coordinator_career
         ) 
-    return users.create_user(new_user, RoleEnum.Coordinator, db)
+    return users_crud.create_user(new_user, RoleEnum.Coordinator, db)
 
 # --------------------------------------------- POST ------------------------------------------------------------
 def create(project: Project, db: Session):
@@ -41,18 +47,18 @@ def create(project: Project, db: Session):
     Crea un proyecto 
     """
     # buscar el id del coordinador
-    coordinator = get_user_from_identification(project.coordinator_identification, db)
+    coordinator = users_crud.get_user_by_identification(project.coordinator_identification, db)
     if coordinator is None:          
         coordinator = create_new_coordinator(project, db)
     
     # buscar el id de la carrera
-    career = get_career_from_name(project.career, 'career_not_exists', db)
+    career = get_career_by_name(project.career, 'career_not_exists', db)
 
     # Validacion de proyectos duplicados
-    db_task = (
+    db_project = (
         db.query(models.Project).filter(models.Project.name == project.name).first()
     )
-    if db_task is not None:
+    if db_project is not None:
         raise HTTPException(status_code=400, detail=messages['project_exists'])
 
     new_project = models.Project(

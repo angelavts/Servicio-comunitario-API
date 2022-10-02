@@ -54,7 +54,7 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
     """
     Obtiene los datos de un usuario a partir de la cédula
     """
-    user = crud.users.get_user_by_identification(identification.identification, db)
+    user = crud.users.get_user_info_by_identification(identification.identification, db)
     return user
 
 
@@ -64,9 +64,8 @@ def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = 
     """
     Crear un estudiante
     """
-    user_response = crud.users.create_user(user, RoleEnum.Student, db)
-    
-    return responses.USER_CREATED_SUCCESS
+    response = crud.users.create_user_with_username(user, RoleEnum.Student, db, settings.CURRENT_TOKEN)
+    return response
 
 
 
@@ -75,9 +74,7 @@ def create_students(users: List[User], db: Session = Depends(get_db), api_key: A
     """
     Crear estudiantes a partir de una lista
     """
-    response = requests.create_users(users, RoleEnum.Student, '1|Z4XfrcGLGsvEbCklqTy9HApkgDV6rITC3Ckw2eTp')
-    print(response)
-    # response = crud.users.create_users_from_list(users, RoleEnum.Student, db)
+    response = crud.users.create_users_with_username(users, RoleEnum.Student, db, settings.CURRENT_TOKEN)
     return response
 
 

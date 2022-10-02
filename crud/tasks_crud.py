@@ -13,23 +13,6 @@ import crud
 # ------------------------------------------ TOOLS -------------------------------------------
 
 
-def get_user_by_identification(identification: str, error_message: str, db: Session):
-    # buscar el id del estudiante
-    db_user =  db.query(models.User).filter(models.User.identification == identification).first()
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail=messages[error_message])
-    
-    return db_user
-
-def get_project_by_id(project_id: str, error_message: str, db: Session):
-    # buscar el id del estudiante
-    db_user =  db.query(models.Project).filter(models.Project.id == project_id).first()
-
-    if db_user is None:
-        raise HTTPException(status_code=400, detail=messages[error_message])
-    
-    return db_user
 
 
 # ------------------------------------------ POST ------------------------------------
