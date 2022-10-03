@@ -5,7 +5,7 @@ from fastapi.security.api_key import APIKey
 from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.users_schema import User, row_to_schema
-from schemas.other_schemas import UserIdentification, IdList
+from schemas.other_schemas import UserIdentification, IdList, UserUpdate
 from db.db import get_db
 from sqlalchemy.orm import Session
 from core import utils
@@ -142,12 +142,12 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
 
 # ------------------------------ UPDATE ------------------------------------------------
 
-@users_router.put('/update_user/{identification}', tags=['users'])
-def update_user(user: User, identification: str, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+@users_router.put('/update_user', tags=['users'])
+def update_user(user: UserUpdate, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Actualiza los datos de un usuario 
     """
-    users = crud.users.update_user(user, identification, db)
+    users = crud.users.update_user(user, db)
     return responses.USER_UPDATED_SUCCESS
 
 

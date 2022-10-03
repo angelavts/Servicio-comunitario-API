@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 
@@ -11,6 +11,21 @@ class UserIdentification(BaseModel):
 
 class IdList(BaseModel):
     id_list: List[int] 
+
+    class Config:
+        orm_mode = True
+
+
+
+class UserUpdate(BaseModel):
+    identification: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    career: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    status: Optional[str] = None
+    project_id: Optional[int] = None
 
     class Config:
         orm_mode = True

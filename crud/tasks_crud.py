@@ -85,7 +85,11 @@ def update_task_status(task_id: int, status: str, db: Session):
 def get_tasks_by_student(student_identification: str, db: Session):
 
     # buscar el id del estudiante
-    db_student = get_user_by_identification(student_identification, 'student_not_exists', db)
+    db_student = crud.users.get_user_by_identification(student_identification, db)
+
+    if db_student == None:
+        raise HTTPException(status_code=500, detail=messages['student_not_exists'])
+
 
     tutor_alias = aliased(models.User, name='tutor')
     # buscar el proyecto que tiene activo el estudiante

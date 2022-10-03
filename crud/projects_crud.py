@@ -234,11 +234,18 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
     filters = []
     if to_approve:
         filters.append(models.User.total_hours >= 120)
-    db_project = (db.query(models.User)
+    db_project = (db.query(models.User.id,
+                           models.User.identification,
+                           models.User.first_name,
+                           models.User.last_name,
+                           models.User.identification,
+                           models.Career.name.label('career'),
+                           models.User.total_hours)
                 .filter(*filters)
                 .join(models.ProjectStudent, models.ProjectStudent.student_id == models.User.id)
                 .filter(models.ProjectStudent.project_id == project_id)
-                .filter(models.ProjectStudent.active == True).all())
+                .filter(models.ProjectStudent.active == True)
+                .outerjoin(models.Career, models.User.career_id == models.Career.id).all())
     return db_project
 
 def get_active_projects(db: Session):

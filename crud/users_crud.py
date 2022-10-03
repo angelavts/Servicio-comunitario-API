@@ -2,6 +2,7 @@ import pandas as pd
 from db import db_models as models
 from db.enums import RoleEnum, UserStatusEnum
 from schemas.users_schema import User
+from schemas.other_schemas import UserUpdate
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import aliased 
 from fastapi import status, HTTPException
@@ -164,19 +165,38 @@ def create_users_with_username(users: List[User], role: str, db: Session, token:
 
 # ------------------------------------------ UPDATE ------------------------------------
 
-def update_user(user: User, identification: str, db: Session):
+def update_user(user: UserUpdate, db: Session):
     """
     Crea un usuario 
     """
-    db_user = db.query(models.User).filter(models.User.identification == user.identification).first()
+    # buscar el usuario por cédula
+    db_user = get_user_by_identification(user.identification, db)
+    # enviar error si el usuario no existe
     if db_user is None:
         raise HTTPException(status_code=400, detail=messages['user_not_exists'])
-    # revisar si existe la carrera 
-    db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
-    # cambiar datos del usuario
-    db_user.first_name = user.first_name
-    db_user.last_name = user.last_name
-    db_user.career_id = db_career.id
+
+    # modificar nombre en caso de que se tenga el dato
+    if user.first_name != None:
+        db_user.first_name = user.first_name
+    # modificar apellido en caso de que se tenga el dato
+    if user.last_name != None:
+        db_user.last_name = user.last_name
+    # modificar correo en caso de que se tenga el dato
+    if user.email != None:
+        db_user.email = user.email
+    # modificar telefono en caso de que se tenga el dato
+    if user.phone != None:
+        db_user.phone = user.phone
+    # modificar status, en caso de que se tenga el dato
+    if user.status != None:
+        db_user.status = user.status
+    # modificar carrera, en caso de que se tenga el dato
+    if user.career != None:
+        # revisar si existe la carrera 
+        db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
+        if db_career != None:
+            db_user.career_id = db_career.id
+   
     try:
         db.add(db_user)
         db.commit()        
