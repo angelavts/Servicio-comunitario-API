@@ -14,6 +14,6 @@ messages = {
     'coordinator_not_exists' : 'Coordinator not found',
     'career_not_exists' : 'Career not found',
     'project_exists': 'Project already exists',
-    'incorrect_status': 'Incorrect status'
-
+    'incorrect_status': 'Incorrect status',
+    'incorrect_project': 'Cannot register a task in an unregistered project'
 }

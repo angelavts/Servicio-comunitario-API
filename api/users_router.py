@@ -38,8 +38,6 @@ def get_project_info_by_student(identification: UserIdentification, db: Session 
     """
     Obtiene información del proyecto donde está inscrito un estudiante
     """
-    # token = request.headers.get('Authorization')
-    print(authorization)
     project_info = crud.users.get_project_info_by_student(identification.identification, db)
     if project_info == None:
         project_info = {}
@@ -57,6 +55,14 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
     user = crud.users.get_user_info_by_identification(identification.identification, db)
     return user
 
+@users_router.post('/enroll_students_in_project/{project_id}', tags=['users'])
+def enroll_students_in_project(identifications: List[str], project_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene los datos de un usuario a partir de la cédula
+    """
+    user = crud.users.enroll_students_in_project(identifications, project_id, db)
+    return user
+
 
 @users_router.post('/create_student', tags=['users'])
 def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
@@ -64,35 +70,39 @@ def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = 
     """
     Crear un estudiante
     """
-    response = crud.users.create_user_with_username(user, RoleEnum.Student, db, settings.CURRENT_TOKEN)
+    response = crud.users.create_user_with_username(user, RoleEnum.Student, db, authorization)
     return response
 
 
 
 @users_router.post('/create_students', tags=['users'])
-def create_students(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def create_students(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
+    authorization: str = Header(default=None)):
     """
     Crear estudiantes a partir de una lista
     """
-    response = crud.users.create_users_with_username(users, RoleEnum.Student, db, settings.CURRENT_TOKEN)
+    response = crud.users.create_users_with_username(users, RoleEnum.Student, db, authorization)
     return response
 
 
 @users_router.post('/create_tutor', tags=['users'])
-def create_tutor(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def create_tutor(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
+    authorization: str = Header(default=None)):
     """
     Crear un tutor
     """
-    user_response = crud.users.create_user(user, RoleEnum.Tutor, db)
-    return responses.USER_CREATED_SUCCESS
+    response = crud.users.create_user_with_username(user, RoleEnum.Tutor, db, authorization)
+    return response
+
 
 
 @users_router.post('/create_tutors', tags=['users'])
-def create_tutors(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def create_tutors(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
+    authorization: str = Header(default=None)):
     """
     Crear tutores a partir de una lista
     """
-    response = crud.users.create_users_from_list(users, RoleEnum.Tutor, db)
+    response = crud.users.create_users_with_username(users, RoleEnum.Tutor, db, authorization)
     return response
 
 @users_router.post('/create_students_from_file', tags=['users'])

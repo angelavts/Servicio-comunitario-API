@@ -8,6 +8,7 @@ from sqlalchemy.orm import aliased
 from fastapi import status, HTTPException
 from typing import List
 from core import utils
+from core import responses
 from core.messages import messages
 from datetime import datetime
 from sqlalchemy import any_, exists, func, case
@@ -165,6 +166,23 @@ def create_users_with_username(users: List[User], role: str, db: Session, token:
 
 # ------------------------------------------ UPDATE ------------------------------------
 
+def update_hours(user_id: int, hours: int, db: Session):
+    # buscar estudiante en la bd
+    db_user = get_user_by_id(user_id, db)
+    # sumar las horas
+    if db_user.total_hours != None:
+        db_user.total_hours += hours
+    else:
+        db_user.total_hours = hours
+    try:
+        db.add(db_user)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        print(e)
+
+
+
 def update_user(user: UserUpdate, db: Session):
     """
     Crea un usuario 
@@ -196,7 +214,14 @@ def update_user(user: UserUpdate, db: Session):
         db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
         if db_career != None:
             db_user.career_id = db_career.id
-   
+    # modificar proyecto en caso de que sea necesario
+    if user.project_id != None:
+        # verificar que el proyecto existe
+        db_project = db.query(models.Project).filter(models.Project.id == user.project_id).first()
+        if db_project is None:
+            raise HTTPException(status_code=400, detail=messages['project_not_exists'])
+        update_project(db_user, db_project, db)
+    # guardar cambios en la db 
     try:
         db.add(db_user)
         db.commit()        
@@ -204,6 +229,89 @@ def update_user(user: UserUpdate, db: Session):
         db.rollback()
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return db_user
+
+def update_project(user: models.User, db_project: models.Project, db: Session):
+    """
+    Actualiza el proyecto de un estudiante
+    """
+
+    # buscar el proyecto que tiene activo actualmente 
+    filters = [models.ProjectStudent.student_id == user.id, models.ProjectStudent.active == True]
+    db_project_active = db.query(models.ProjectStudent).filter(*filters).first()
+
+    if db_project_active is not None:
+        # desactivar el proyecto que tiene activo actualmente
+        db_project_active.active = False
+        try:
+            # actualizar base de datos
+            db.add(db_project_active)
+            db.commit()        
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=messages['internal_error'])
+    
+    # buscar la relación del proyecto que se quiere crear
+    filters = [models.ProjectStudent.project_id == db_project.id, 
+               models.ProjectStudent.student_id == user.id, models.ProjectStudent.active == True]
+    db_project_new = db.query(models.ProjectStudent).filter(*filters).first()
+
+    if db_project_new is not None:
+        # si existe, activar
+        db_project_new.active = True
+    else:
+        # si no existe, crear una nueva
+        db_project_new = models.ProjectStudent(
+            project_id=db_project.id,
+            student_id=user.id,
+            active=True
+        ) 
+    # guardar el cambio en la bd
+    try:
+        # actualizar base de datos
+        db.add(db_project_new)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    return db_project_new
+
+
+def enroll_students_in_project(identifications: List[str], project_id: int,  db: Session):
+    """
+        Inscribe a todos los estudiantes dados en una lista en un proyecto especifico
+    """
+    success = []
+    failed = []
+    # verificar que el proyecto existe
+    db_project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if db_project is None:
+        raise HTTPException(status_code=400, detail=messages['project_not_exists'])
+
+    for identification in identifications: 
+        # buscar el estudiante en la bd
+        db_user = get_user_by_identification(identification, db)
+        if db_user is None:
+            failed.append(identification)
+        else:
+            try:
+                # inscribir estudiante en el proyecto indicado
+                update_project(db_user, db_project, db)  
+                success.append(identification)    
+            except Exception as e:
+                print(e)
+                failed.append(identification) 
+    
+    if not failed:
+        response = responses.STUDENTS_ENROLLED
+    else:
+        response = {
+            'successful' : success,
+            'failed' : failed 
+        }  
+    return response
+        
+
+
 
 def update_student_status(identification: str, status: str, db: Session):
     """
@@ -251,10 +359,18 @@ def is_user_in_db(identification: str, db: Session):
 
 def get_user_by_identification(identification: str, db: Session):
     """
-    Verifica si el usuario existe en la base de datos
+    Busca un usuario la base de datos
     """
     # buscar el id del usuario
     db_user =  db.query(models.User).filter(models.User.identification == identification).first()
+    return db_user
+
+def get_user_by_id(user_id: int, db: Session):
+    """
+    Busca un usuario la base de datos
+    """
+    # buscar el id del usuario
+    db_user =  db.query(models.User).filter(models.User.id == user_id).first()
     return db_user
 
 
@@ -297,6 +413,8 @@ def get_students(db: Session, status: str=None):
                     models.User.identification, 
                     models.User.first_name, 
                     models.User.last_name,
+                    models.User.phone,
+                    models.User.email,
                     models.User.total_hours, 
                     models.User.status,
                     models.User.date_approval,
@@ -432,7 +550,9 @@ def get_tutors(db: Session):
     db_users = (db.query(models.User.id,
                          models.User.identification, 
                          models.User.first_name, 
-                         models.User.last_name,                     
+                         models.User.last_name,              
+                         models.User.phone,
+                         models.User.email,       
                          career_alias.name)
                     .outerjoin(career_alias, career_alias.id == models.User.career_id)
                 .filter(models.User.role == RoleEnum.Tutor)               

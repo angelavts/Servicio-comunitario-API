@@ -3,6 +3,7 @@ from db import db_models as models
 from sqlalchemy.orm import Session
 from db.db import get_db
 from datetime import datetime
+from api import requests
 
 # crear una sesión global para este script
 db = get_db()

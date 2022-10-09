@@ -20,3 +20,7 @@ PROJECT_CREATED_SUCCESS = {
 PROJECT_UPDATED_SUCCESS = {
     'detail': 'Project updated successfully'
 }
+
+STUDENTS_ENROLLED = {
+    'detail': 'Students enrolled successfully'
+}

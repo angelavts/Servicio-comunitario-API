@@ -23,7 +23,10 @@ def create(task: Task, db: Session):
     """
 
     # buscar el id del estudiante
-    db_student = get_user_by_identification(task.student_identification, 'student_not_exists', db)
+    db_student = crud.users.get_user_by_identification(task.student_identification, db)
+
+    if db_student is None:
+        raise HTTPException(status_code=400, detail=messages['student_not_exists'])
 
     # buscar si existe la tarea
     db_task = (
@@ -33,9 +36,19 @@ def create(task: Task, db: Session):
     if db_task is not None:
         raise HTTPException(status_code=400, detail=messages['task_exists'])
 
+    # buscar si existe el proyecto
+    db_project = crud.projects.get_project_by_id(task.project_id, 'project_not_exists', db)
+
+    # buscar si el proyecto de la tarea coincide con el proyecto
+    # que tiene el estudiante activo
+    filters = [models.ProjectStudent.student_id == db_student.id, models.ProjectStudent.active == True]
+    db_project_active = db.query(models.ProjectStudent).filter(*filters).first()
+
+    if db_project_active == None or db_project_active.project_id != task.project_id:
+        raise HTTPException(status_code=400, detail=messages['incorrect_project'])
 
     # buscar el id del tutor
-    db_tutor = get_user_by_identification(task.tutor_identification, 'tutor_not_exists', db)
+    db_tutor = crud.users.get_user_by_identification(task.tutor_identification, db)
 
     new_task = models.Task(
         name=task.name,
@@ -43,7 +56,7 @@ def create(task: Task, db: Session):
         cost=task.cost,
         student_id = db_student.id,
         project_id = task.project_id,
-        tutor_id = db_tutor.id
+        tutor_id = db_tutor.id if db_tutor != None else None
     ) 
 
     try:
@@ -60,22 +73,35 @@ def update_task_status(task_id: int, status: str, db: Session):
     """
     Actualizar el status de una tarea 
     """
+
     db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
     if db_task is None:
         raise HTTPException(status_code=400, detail=messages['task_not_exists'])
 
-    # cambiar status de la tarea
-    db_task.status = status
-    # si la tarea está completada
-    if status == TaskStatusEnum.Completed:
-        # agregar fecha de finalización
-        db_task.date_end = datetime.now()
-    try:
-        db.add(db_task)
-        db.commit()        
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    if db_task.status != status:
+        hours = 0        
+        # si la tarea está completada
+        if status == TaskStatusEnum.Completed:
+            # agregar fecha de finalización
+            db_task.date_end = datetime.now()
+            # sumar las horas
+            crud.users.update_hours(db_task.student_id, db_task.cost, db)
+        elif db_task.status == TaskStatusEnum.Completed:
+            # si la tarea estaba completada
+            # quitar fecha de finalización
+            db_task.date_end = None
+            # restar las horas
+            crud.users.update_hours(db_task.student_id, -db_task.cost)
+
+        # cambiar status de la tarea
+        db_task.status = status
+        # guardar cambios en la db
+        try:
+            db.add(db_task)
+            db.commit()        
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=messages['internal_error'])
     return db_task
 
 # ------------------------------------------ GET ------------------------------------
@@ -109,7 +135,7 @@ def get_tasks_by_student(student_identification: str, db: Session):
                         models.Task.cost,
                         models.Task.status
                         )
-                        .join(tutor_alias, tutor_alias.id == models.Task.tutor_id)
+                        .outerjoin(tutor_alias, tutor_alias.id == models.Task.tutor_id)
                         .filter(models.Task.student_id == db_student.id)
                         .filter(models.Task.project_id == project.id)
                         .all())
@@ -122,7 +148,7 @@ def get_tasks_by_project(project_id: int, db: Session):
     """
 
     # buscar el id del proyecto
-    db_project = get_project_by_id(project_id, 'project_not_exists', db)
+    db_project = crud.projects.get_project_by_id(project_id, 'project_not_exists', db)
 
     user_alias = aliased(models.User, name='student')
     tutor_alias = aliased(models.User, name='tutor')
@@ -156,7 +182,10 @@ def get_tasks_by_tutor(tutor_identification: str, db: Session):
     """
 
     # buscar el id del tutor
-    db_tutor = get_user_by_identification(tutor_identification, 'tutor_not_exists', db)
+    db_tutor = crud.users.get_user_by_identification(tutor_identification, db)
+
+    if db_tutor is None:
+        raise HTTPException(status_code=400, detail=messages['tutor_not_exists'])
 
     student_alias = aliased(models.User, name='student')
     project_alias = aliased(models.Project, name='project')
