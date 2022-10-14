@@ -65,43 +65,43 @@ def enroll_students_in_project(identifications: List[str], project_id: int, db: 
 
 
 @users_router.post('/create_student', tags=['users'])
-def create_student(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
-    authorization: str = Header(default=None)):
+def create_student(user: User, request: Request, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crear un estudiante
     """
+    authorization = request.headers.get('authorization')
     response = crud.users.create_user_with_username(user, RoleEnum.Student, db, authorization)
     return response
 
 
 
 @users_router.post('/create_students', tags=['users'])
-def create_students(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
-    authorization: str = Header(default=None)):
+def create_students(users: List[User], request: Request, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crear estudiantes a partir de una lista
     """
+    authorization = request.headers.get('authorization')
     response = crud.users.create_users_with_username(users, RoleEnum.Student, db, authorization)
     return response
 
 
 @users_router.post('/create_tutor', tags=['users'])
-def create_tutor(user: User, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
-    authorization: str = Header(default=None)):
+def create_tutor(user: User, request: Request, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crear un tutor
     """
+    authorization = request.headers.get('authorization')
     response = crud.users.create_user_with_username(user, RoleEnum.Tutor, db, authorization)
     return response
 
 
 
 @users_router.post('/create_tutors', tags=['users'])
-def create_tutors(users: List[User], db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key),
-    authorization: str = Header(default=None)):
+def create_tutors(users: List[User], request: Request, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     Crear tutores a partir de una lista
     """
+    authorization = request.headers.get('authorization')
     response = crud.users.create_users_with_username(users, RoleEnum.Tutor, db, authorization)
     return response
 
@@ -153,11 +153,14 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
 # ------------------------------ UPDATE ------------------------------------------------
 
 @users_router.put('/update_user', tags=['users'])
-def update_user(user: UserUpdate, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def update_user(user: UserUpdate, db: Session = Depends(get_db), 
+    api_key: APIKey = Depends(auth.get_api_key), authorization: str = Header(default=None)):
     """
     Actualiza los datos de un usuario 
     """
-    users = crud.users.update_user(user, db)
+    print('update_user')
+    print(authorization)
+    users = crud.users.update_user(user, authorization, db)
     return responses.USER_UPDATED_SUCCESS
 
 

@@ -183,7 +183,7 @@ def update_hours(user_id: int, hours: int, db: Session):
 
 
 
-def update_user(user: UserUpdate, db: Session):
+def update_user(user: UserUpdate, token: str, db: Session):
     """
     Crea un usuario 
     """
@@ -193,40 +193,49 @@ def update_user(user: UserUpdate, db: Session):
     if db_user is None:
         raise HTTPException(status_code=400, detail=messages['user_not_exists'])
 
-    # modificar nombre en caso de que se tenga el dato
-    if user.first_name != None:
-        db_user.first_name = user.first_name
-    # modificar apellido en caso de que se tenga el dato
-    if user.last_name != None:
-        db_user.last_name = user.last_name
+    is_modified_in_auth_service = True
     # modificar correo en caso de que se tenga el dato
     if user.email != None:
         db_user.email = user.email
-    # modificar telefono en caso de que se tenga el dato
-    if user.phone != None:
-        db_user.phone = user.phone
-    # modificar status, en caso de que se tenga el dato
-    if user.status != None:
-        db_user.status = user.status
-    # modificar carrera, en caso de que se tenga el dato
-    if user.career != None:
-        # revisar si existe la carrera 
-        db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
-        if db_career != None:
-            db_user.career_id = db_career.id
-    # modificar proyecto en caso de que sea necesario
-    if user.project_id != None:
-        # verificar que el proyecto existe
-        db_project = db.query(models.Project).filter(models.Project.id == user.project_id).first()
-        if db_project is None:
-            raise HTTPException(status_code=400, detail=messages['project_not_exists'])
-        update_project(db_user, db_project, db)
-    # guardar cambios en la db 
-    try:
-        db.add(db_user)
-        db.commit()        
-    except Exception as e:
-        db.rollback()
+        response = requests.update_user(user, token)
+        print(response)
+        is_modified_in_auth_service = response["ok"]
+    
+    if is_modified_in_auth_service:
+        # modificar nombre en caso de que se tenga el dato
+        if user.first_name != None:
+            db_user.first_name = user.first_name
+        # modificar apellido en caso de que se tenga el dato
+        if user.last_name != None:
+            db_user.last_name = user.last_name
+
+        # modificar telefono en caso de que se tenga el dato
+        if user.phone != None:
+            db_user.phone = user.phone
+        # modificar status, en caso de que se tenga el dato
+        if user.status != None:
+            db_user.status = user.status
+        # modificar carrera, en caso de que se tenga el dato
+        if user.career != None:
+            # revisar si existe la carrera 
+            db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
+            if db_career != None:
+                db_user.career_id = db_career.id
+        # modificar proyecto en caso de que sea necesario
+        if user.project_id != None:
+            # verificar que el proyecto existe
+            db_project = db.query(models.Project).filter(models.Project.id == user.project_id).first()
+            if db_project is None:
+                raise HTTPException(status_code=400, detail=messages['project_not_exists'])
+            update_project(db_user, db_project, db)
+        # guardar cambios en la db 
+        try:
+            db.add(db_user)
+            db.commit()        
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(status_code=500, detail=messages['internal_error'])
+    else:
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return db_user
 
