@@ -178,7 +178,7 @@ def update_students_status(id_list: IdList, status: UserStatusEnum, db: Session 
     """
     
     """
-    crud.users.update_students_status(id_list.id_list, UserStatusEnum.Approved, db)
+    crud.users.update_students_status(id_list.id_list, status, db)
     return responses.USER_UPDATED_SUCCESS
 
 # ------------------------------ GET ------------------------------------------------
