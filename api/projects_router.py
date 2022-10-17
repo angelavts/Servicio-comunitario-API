@@ -22,7 +22,7 @@ projects_router = APIRouter()
 
 # crear un proyecto
 @projects_router.post('/create_project', tags=['projects'])
-def create_project(project: Project, db: Session = Depends(get_db)):
+def create_project(project: Project, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
     """
     create a project
     """
@@ -31,7 +31,8 @@ def create_project(project: Project, db: Session = Depends(get_db)):
 
 # actualizar proyectos
 @projects_router.put('/update_project_status/{project_id}/{status}', tags=['projects'])
-def update_project_status(project_id: int, status: str, db: Session = Depends(get_db)):
+def update_project_status(project_id: int, status: str, db: Session = Depends(get_db), 
+                          api_key: APIKey = Depends(auth.get_api_key)):
     """
     Update project status
     """
@@ -39,7 +40,8 @@ def update_project_status(project_id: int, status: str, db: Session = Depends(ge
     return responses.PROJECT_UPDATED_SUCCESS
 
 @projects_router.put('/update_project_date_end/{project_id}/{date}', tags=['projects'])
-def update_project_date_end(project_id: int, date: datetime, db: Session = Depends(get_db)):
+def update_project_date_end(project_id: int, date: datetime, db: Session = Depends(get_db)
+                            , api_key: APIKey = Depends(auth.get_api_key)):
     """
     Update project status
     """

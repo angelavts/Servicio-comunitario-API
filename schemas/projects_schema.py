@@ -12,6 +12,8 @@ class Project(BaseModel):
     coordinator_first_name: str 
     coordinator_last_name: str
     coordinator_career: str 
+    coordinator_email: str
+    coordinator_phone: str
 
     class Config:
         orm_mode = True
@@ -26,6 +28,8 @@ def row_to_schema(row: list):
             coordinator_first_name=str(row[5]),
             coordinator_last_name=str(row[6]),
             coordinator_career=str(row[7]),
+            coordinator_email=str(row[8]),
+            coordinator_phone=str(row[9])
     )
     return new_user
         

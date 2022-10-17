@@ -37,7 +37,9 @@ def create_new_coordinator(project: Project, db: Session):
             identification = project.coordinator_identification,
             first_name = project.coordinator_first_name,
             last_name = project.coordinator_last_name,
-            career = project.coordinator_career
+            career = project.coordinator_career,
+            email = project.coordinator_email,
+            phone = project.coordinator_phone
         ) 
     return users_crud.create_user(new_user, RoleEnum.Coordinator, db)
 
@@ -86,9 +88,9 @@ def create_projects_from_list(projects: List[Project], db: Session):
     for project in projects:
         try:
             new_project = create(project, db)
-            successful.append(new_project)
+            successful.append(project)
         except Exception as e:
-            failed.append({'Project': new_project, 'detail': str(e)})
+            failed.append(project)
     response['successful'] = successful
     response['failed'] = failed        
     return response
