@@ -477,6 +477,9 @@ def get_students_with_project(db: Session):
                     models.User.identification, 
                     models.User.first_name, 
                     models.User.last_name,
+                    models.User.phone,
+                    models.User.email,
+                    models.User.status,
                     career_alias.name.label('career'), 
                     projects_alias.name.label('project'),
                     models.User.total_hours)
@@ -500,6 +503,9 @@ def get_students_by_status(db: Session, status: str):
                     models.User.identification, 
                     models.User.first_name, 
                     models.User.last_name,
+                    models.User.phone,
+                    models.User.email,
+                    models.User.status,
                     career_alias.name.label('career'),
                     models.User.total_hours
                     )
@@ -520,7 +526,10 @@ def get_students_without_project(db: Session):
                     models.User.id,
                     models.User.identification, 
                     models.User.first_name, 
-                    models.User.last_name,                      
+                    models.User.last_name, 
+                    models.User.phone,
+                    models.User.email,
+                    models.User.status,                     
                     career_alias.name.label('career'), 
                     models.User.total_hours,
                     func.count(models.ProjectStudent.active)
@@ -542,6 +551,8 @@ def get_users_by_role(role: str, db: Session):
                          models.User.identification, 
                          models.User.fullname,
                          models.User.total_hours, 
+                         models.User.phone,
+                         models.User.email,
                          models.User.status, 
                          models.User.role,
                          models.User.career_id,                      
