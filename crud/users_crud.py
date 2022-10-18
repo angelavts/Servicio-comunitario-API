@@ -332,8 +332,10 @@ def update_student_status(identification: str, status: str, db: Session):
     # cambiar el estatus
     db_user.status = status
     # si el estudiante es aprobado, se coloca su fecha de finalización
+    date_approval = None
     if status == UserStatusEnum.Approved:
-        date_approval = datetime.now()
+        date_approval = datetime.now()     
+    db_user.date_approval = date_approval
     try:
         # actualizar base de datos
         db.add(db_user)
@@ -348,12 +350,35 @@ def update_students_status(id_list: list, status: str, db: Session):
     """
         Actualiza el status de varios estudiantes 
     """
-    try:
-        db.query(models.User).filter(models.User.id.in_(id_list)).update({'status': status})
-        db.commit() 
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    successful = []
+    failed = []
+
+    for id_student in id_list:
+        db_student = db.query(models.User).filter(models.User.id == id_student).first()
+        if db_student != None:
+            # cambiar el estatus
+            db_student.status = status
+            # si el estudiante es aprobado, se coloca su fecha de finalización
+            date_approval = None
+            if status == UserStatusEnum.Approved:
+                date_approval = datetime.now()     
+            db_student.date_approval = date_approval
+            try:
+                # actualizar base de datos
+                db.add(db_student)
+                db.commit() 
+                successful.append(id_student)
+            except Exception as e:
+                print(e)
+                failed.append(id_student)
+                db.rollback()
+        else:
+            failed.append(id_student)
+    
+    response = {}
+    response['successful'] = successful
+    response['failed'] = failed        
+    return response
 
 # ------------------------------------------ GET ------------------------------------
 
@@ -443,7 +468,7 @@ def get_approved_students(db: Session):
     Cédula, nombre, apellido, horas, estatus, proyecto, fecha de aprobación
     """
     filters = [models.User.role == RoleEnum.Student, models.User.status == UserStatusEnum.Approved]
-
+    print("get approved students")
     projects_alias = aliased(models.Project, name='project')
     career_alias = aliased(models.Career, name='career')
     db_students = (db.query(

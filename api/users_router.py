@@ -165,7 +165,8 @@ def update_user(user: UserUpdate, db: Session = Depends(get_db),
 
 
 @users_router.put('/update_student_status/{status}', tags=['users'])
-def update_student_status(identification: UserIdentification, status: UserStatusEnum, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+def update_student_status(identification: UserIdentification, status: UserStatusEnum, db: Session = Depends(get_db), 
+                          api_key: APIKey = Depends(auth.get_api_key)):
     """
     Actualiza el estatus de un estudiante
     """
@@ -174,12 +175,13 @@ def update_student_status(identification: UserIdentification, status: UserStatus
 
 
 @users_router.put('/update_students_status/{status}', tags=['users'])
-def update_students_status(id_list: IdList, status: UserStatusEnum, db: Session = Depends(get_db)):
+def update_students_status(id_list: IdList, status: UserStatusEnum, db: Session = Depends(get_db),
+                           api_key: APIKey = Depends(auth.get_api_key)):
     """
     
     """
-    crud.users.update_students_status(id_list.id_list, status, db)
-    return responses.USER_UPDATED_SUCCESS
+    response = crud.users.update_students_status(id_list.id_list, status, db)
+    return response
 
 # ------------------------------ GET ------------------------------------------------
 
