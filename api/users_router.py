@@ -21,6 +21,7 @@ from api import requests
 # crear router
 
 users_router = APIRouter()
+auth_key = 'Authorization' 
 
 # ------------------------------ POST ------------------------------------------------
 @users_router.post('/login', tags=['users'])
@@ -69,7 +70,7 @@ def create_student(user: User, request: Request, db: Session = Depends(get_db), 
     """
     Crear un estudiante
     """
-    authorization = request.headers.get('authorization')
+    authorization = request.headers.get(auth_key)
     response = crud.users.create_user_with_username(user, RoleEnum.Student, db, authorization)
     return response
 
@@ -80,7 +81,7 @@ def create_students(users: List[User], request: Request, db: Session = Depends(g
     """
     Crear estudiantes a partir de una lista
     """
-    authorization = request.headers.get('authorization')
+    authorization = request.headers.get(auth_key)
     response = crud.users.create_users_with_username(users, RoleEnum.Student, db, authorization)
     return response
 
@@ -90,7 +91,7 @@ def create_tutor(user: User, request: Request, db: Session = Depends(get_db), ap
     """
     Crear un tutor
     """
-    authorization = request.headers.get('authorization')
+    authorization = request.headers.get(auth_key)
     response = crud.users.create_user_with_username(user, RoleEnum.Tutor, db, authorization)
     return response
 
@@ -101,7 +102,7 @@ def create_tutors(users: List[User], request: Request, db: Session = Depends(get
     """
     Crear tutores a partir de una lista
     """
-    authorization = request.headers.get('authorization')
+    authorization = request.headers.get(auth_key)
     response = crud.users.create_users_with_username(users, RoleEnum.Tutor, db, authorization)
     return response
 
