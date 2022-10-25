@@ -16,20 +16,6 @@ from itertools import groupby
 from api import requests
 
 # ------------------------------------------ POST ------------------------------------
-def create_user_with_username(user: User, role: str, db: Session):
-    """
-    Crea un usuario 
-    """    
-    db_user = db.query(models.User).filter(models.User.identification == user.identification).first()
-    if db_user is not None:
-        raise HTTPException(status_code=400, detail=messages['user_exists'])
-    new_user = build_new_user(user, role, db) 
-    try:
-        db.add(new_user)
-        db.commit()        
-    except Exception as e:
-        db.rollback()
-        raise HTTPEx
 
 def create_user(user: User, role: str, db: Session):
     """
