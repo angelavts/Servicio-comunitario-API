@@ -567,7 +567,7 @@ def get_users_by_role(role: str, db: Session):
                          models.User.status, 
                          models.User.role,
                          models.User.career_id,                      
-                        models.Career.name.label('career_name'))
+                        models.Career.name.label('career'))
                     .outerjoin(models.Career, models.Career.id == models.User.career_id)
                 .filter(models.User.role == role)               
                 .all())
@@ -584,7 +584,7 @@ def get_tutors(db: Session):
                          models.User.last_name,              
                          models.User.phone,
                          models.User.email,       
-                         career_alias.name)
+                         career_alias.name.label('career'))
                     .outerjoin(career_alias, career_alias.id == models.User.career_id)
                 .filter(models.User.role == RoleEnum.Tutor)               
                 .all())
