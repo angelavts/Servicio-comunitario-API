@@ -4,6 +4,9 @@ from sqlalchemy import String, Boolean, Integer, Column, Text, DateTime, UniqueC
 
 class ProjectStudent(Base):
     __tablename__ = 'projects_students'
+    __table_args__ = (
+        UniqueConstraint('student_id', 'project_id'),
+    )
     id = Column(Integer(), primary_key=True)
     active = Column(Boolean, nullable=False, default=True)
     project_id = Column(Integer(), ForeignKey('projects.id'), nullable=False)

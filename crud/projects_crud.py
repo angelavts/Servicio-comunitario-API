@@ -240,7 +240,6 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
                            models.User.identification,
                            models.User.first_name,
                            models.User.last_name,
-                           models.User.identification,
                            models.Career.name.label('career'),
                            models.User.total_hours)
                 .filter(*filters)
