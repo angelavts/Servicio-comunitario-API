@@ -57,11 +57,12 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
     return user
 
 @users_router.post('/enroll_students_in_project/{project_id}', tags=['users'])
-def enroll_students_in_project(identifications: List[str], project_id: int, db: Session = Depends(get_db)):
+def enroll_students_in_project(id_students: List[int], project_id: int, db: Session = Depends(get_db), 
+    api_key: APIKey = Depends(auth.get_api_key)):
     """
-    Obtiene los datos de un usuario a partir de la cédula
+    Inscribe a los estudiantes seleccionados en un proyecto a partir de una lista de ids
     """
-    user = crud.users.enroll_students_in_project(identifications, project_id, db)
+    user = crud.users.enroll_students_in_project(id_students, project_id, db)
     return user
 
 

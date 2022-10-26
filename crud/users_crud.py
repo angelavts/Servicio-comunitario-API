@@ -271,7 +271,7 @@ def update_project(user: models.User, db_project: models.Project, db: Session):
     return db_project_new
 
 
-def enroll_students_in_project(identifications: List[str], project_id: int,  db: Session):
+def enroll_students_in_project(id_students: List[int], project_id: int,  db: Session):
     """
         Inscribe a todos los estudiantes dados en una lista en un proyecto especifico
     """
@@ -282,19 +282,19 @@ def enroll_students_in_project(identifications: List[str], project_id: int,  db:
     if db_project is None:
         raise HTTPException(status_code=400, detail=messages['project_not_exists'])
 
-    for identification in identifications: 
+    for id_student in id_students: 
         # buscar el estudiante en la bd
-        db_user = get_user_by_identification(identification, db)
+        db_user = get_user_by_id(id_student, db)
         if db_user is None:
-            failed.append(identification)
+            failed.append(id_student)
         else:
             try:
                 # inscribir estudiante en el proyecto indicado
                 update_project(db_user, db_project, db)  
-                success.append(identification)    
+                success.append(id_student)    
             except Exception as e:
                 print(e)
-                failed.append(identification) 
+                failed.append(id_student) 
     
     if not failed:
         response = responses.STUDENTS_ENROLLED
