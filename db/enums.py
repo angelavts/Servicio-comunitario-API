@@ -8,7 +8,7 @@ class TaskStatusEnum(str, Enum):
     Pending = 'Pendiente'
     InProgress = 'En progreso'
     Completed = 'Completada'
-    Inactive = 'Comunidad'
+    Inactive = 'Inactiva'
 
 task_status_enum = ('Pendiente','En progreso', 'Completada', 'Inactiva')
 task_status_enum = ENUM(*task_status_enum, name='task_status_enum')

@@ -16,7 +16,7 @@ from db.test_data import populate_db
 
 def create_tables():
     # puede incluir condiciones en caso de que una tabla ya esté creada
-    Base.metadata.drop_all(engine) # PARA PRUEBAS
+    # Base.metadata.drop_all(engine) # PARA PRUEBAS
     Base.metadata.create_all(engine)
 
 def create_and_populate_db():

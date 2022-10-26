@@ -91,7 +91,7 @@ def update_task_status(task_id: int, status: str, db: Session):
             # quitar fecha de finalización
             db_task.date_end = None
             # restar las horas
-            crud.users.update_hours(db_task.student_id, -db_task.cost)
+            crud.users.update_hours(db_task.student_id, -db_task.cost, db)
 
         # cambiar status de la tarea
         db_task.status = status
