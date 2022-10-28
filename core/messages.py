@@ -15,5 +15,6 @@ messages = {
     'career_not_exists' : 'Career not found',
     'project_exists': 'Project already exists',
     'incorrect_status': 'Incorrect status',
-    'incorrect_project': 'Cannot register a task in an unregistered project'
+    'incorrect_project': 'Cannot register a task in an unregistered project',
+    'user_not_in_project': 'The student does not have any projects registered'
 }

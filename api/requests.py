@@ -16,8 +16,9 @@ def create_user(user: User, role: str, token: str):
             "role": role
         }
     # definir header para el request
+    print("TOKEN -------> " + token)
     headers = {
-        'Authorization': 'Bearer {}'.format(token)
+        'Authorization': 'Bearer ' + token
     } 
     url = f'{settings.AUTH_SERVICE_URL}/api/register'
     response = requests.post(url, json=new_user, headers=headers)
@@ -35,8 +36,9 @@ def update_user(user: User, token: str):
             "email": user.email            
         }
     # definir header para el request
+    print("TOKEN -------> " + token)
     headers = {
-        'Authorization': 'Bearer {}'.format(token)
+        'Authorization': token
     } 
     url = f'{settings.AUTH_SERVICE_URL}/api/edit-user-profile'
     response = requests.put(url, json=modified_user, headers=headers)
@@ -50,9 +52,11 @@ def update_user(user: User, token: str):
 
 
 def create_users(users: List[User], role: str, token: str):
+    print("Create users")
     users_list = []
     # armar la estructura json para registrar usuarios
     # en el servicio de autenticación
+    print("TOKEN -------> " + token)
     for user in users:
         new_user = {
                 "first_name": user.first_name,
@@ -66,9 +70,12 @@ def create_users(users: List[User], role: str, token: str):
     users_json = {
         "users": users_list
     }
+
+    print("USERS JSON")
+    print(users_json)
     # definir header para el request
     headers = {
-        'Authorization': 'Bearer {}'.format(token) 
+        'Authorization': token
     } 
     url = f'{settings.AUTH_SERVICE_URL}/api/register-masivo'
     response = requests.post(url, json=users_json, headers=headers)
@@ -76,6 +83,7 @@ def create_users(users: List[User], role: str, token: str):
     try:
         response = response.json()
     except Exception as e:
+        print("errorrrrrrrrrrrrrrrrrr")
         print(e)
         response = {'status_code': response.status_code}
     return response

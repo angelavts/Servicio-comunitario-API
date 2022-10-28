@@ -9,6 +9,7 @@ from fastapi import status, HTTPException
 from typing import List
 from core import utils
 from core import responses
+from core.config import settings
 from core.messages import messages
 from datetime import datetime
 from sqlalchemy import any_, exists, func, case
@@ -107,6 +108,7 @@ def create_users_with_username(users: List[User], role: str, db: Session, token:
     try:
         auth_list = response['users']
     except Exception as e:
+        print("Error creating users")
         print(e)
         # si no se tiene la lista de usuarios es porque no se registró ninguno
         response = {
@@ -181,7 +183,7 @@ def update_user(user: UserUpdate, token: str, db: Session):
 
     is_modified_in_auth_service = True
     # modificar correo en caso de que se tenga el dato
-    if user.email != None:
+    if user.email != None and user.email != db_user.email:
         db_user.email = user.email
         response = requests.update_user(user, token)
         print(response)
@@ -189,26 +191,26 @@ def update_user(user: UserUpdate, token: str, db: Session):
     
     if is_modified_in_auth_service:
         # modificar nombre en caso de que se tenga el dato
-        if user.first_name != None:
+        if user.first_name != None and user.first_name != db_user.first_name:
             db_user.first_name = user.first_name
         # modificar apellido en caso de que se tenga el dato
-        if user.last_name != None:
+        if user.last_name != None and user.last_name != db_user.last_name:
             db_user.last_name = user.last_name
 
         # modificar telefono en caso de que se tenga el dato
-        if user.phone != None:
+        if user.phone != None and user.phone != db_user.phone:
             db_user.phone = user.phone
         # modificar status, en caso de que se tenga el dato
-        if user.status != None:
+        if user.status != None and user.status != db_user.status:
             db_user.status = user.status
         # modificar carrera, en caso de que se tenga el dato
         if user.career != None:
             # revisar si existe la carrera 
             db_career = db.query(models.Career).filter(models.Career.name == user.career).first()
-            if db_career != None:
+            if db_career != None and user.career != db_career.name:
                 db_user.career_id = db_career.id
         # modificar proyecto en caso de que sea necesario
-        if user.project_id != None:
+        if user.project_id != None and user.project_id != db_user.project_id:
             # verificar que el proyecto existe
             db_project = db.query(models.Project).filter(models.Project.id == user.project_id).first()
             if db_project is None:
@@ -325,6 +327,36 @@ def update_student_status(identification: str, status: str, db: Session):
     try:
         # actualizar base de datos
         db.add(db_user)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    return db_user
+
+
+def delete_student_project(identification: str, db: Session):
+    """
+    Saca al estudiante del proyecto actual
+    """
+    db_user = db.query(models.User).filter(models.User.identification == identification).first()
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages['user_not_exists'])
+    # busca el proyecto que tiene inscrito
+    db_project = (db.query(models.ProjectStudent)
+                    .filter(models.ProjectStudent.student_id == db_user.id)
+                    .filter(models.ProjectStudent.active == True).first())
+    if db_project is None:
+        raise HTTPException(status_code=400, detail=messages['user_not_in_project'])
+    # colocar el proyecto en falso
+    db_project.active = False
+    # revisar la cantidad de horas del estudiante
+    # si las horas son menores a la cantidad de horas requeridas, se ponen a 0
+    if db_user.total_hours < settings.MIN_HOURS:
+        db_user.total_hours = 0
+    try:
+        # actualizar base de datos
+        db.add(db_user)
+        db.add(db_project)
         db.commit()        
     except Exception as e:
         db.rollback()

@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     API_KEYS = os.getenv('API_KEYS')
     ORIGINS = os.getenv('ORIGINS')
     AUTH_SERVICE_URL: str = os.getenv('AUTH_SERVICE_URL')
+    # reglas de negocio
+    MIN_HOURS: int = int(os.getenv('MIN_HOURS'))
+    TOTAL_HOURS: int = int(os.getenv('TOTAL_HOURS'))
 
 settings = Settings()
 settings.VALID_FILE_EXTENSIONS = settings.VALID_FILE_EXTENSIONS.split(' ')

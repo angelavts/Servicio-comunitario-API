@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import status, HTTPException
 from typing import List
 from core.messages import messages
+from core.config import settings
 from datetime import datetime
 from db.enums import ProjectStatusEnum, RoleEnum
 from sqlalchemy import func
@@ -235,7 +236,7 @@ def get_students(project_id: int, db: Session, to_approve: bool = False):
     """
     filters = []
     if to_approve:
-        filters.append(models.User.total_hours >= 120)
+        filters.append(models.User.total_hours >= settings.TOTAL_HOURS)
     db_project = (db.query(models.User.id,
                            models.User.identification,
                            models.User.first_name,

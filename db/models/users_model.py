@@ -15,7 +15,7 @@ class User(Base):
     email = Column(String(100), nullable=True)  
     phone = Column(String(20), nullable=True)  
     career_id = Column(Integer(), ForeignKey('careers.id'), nullable=True)
-    total_hours = Column(Integer(), nullable=True)
+    total_hours = Column(Integer(), nullable=False, default=0)
     role = Column(role_enum, nullable=False)
     status = Column(user_status_enum, nullable=False, default=UserStatusEnum.Active)
     date_approval = Column(DateTime(), nullable=True)

@@ -166,6 +166,16 @@ def update_user(user: UserUpdate, db: Session = Depends(get_db),
     return responses.USER_UPDATED_SUCCESS
 
 
+@users_router.put('/delete_student_project', tags=['users'])
+def delete_student_project(identification: UserIdentification, db: Session = Depends(get_db), 
+                          api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Saca al estudiante del proyecto actual
+    """
+    users = crud.users.delete_student_project(identification.identification, db)
+    return responses.USER_UPDATED_SUCCESS
+
+
 @users_router.put('/update_student_status/{status}', tags=['users'])
 def update_student_status(identification: UserIdentification, status: UserStatusEnum, db: Session = Depends(get_db), 
                           api_key: APIKey = Depends(auth.get_api_key)):
