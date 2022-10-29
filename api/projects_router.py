@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from os import getcwd
 from schemas.projects_schema import Project, row_to_schema
+from schemas.other_schemas import ProjectUpdate
 from db.db import get_db
 from db.enums import ProjectStatusEnum
 from sqlalchemy.orm import Session
@@ -30,6 +31,14 @@ def create_project(project: Project, db: Session = Depends(get_db), api_key: API
     return responses.PROJECT_CREATED_SUCCESS
 
 # actualizar proyectos
+@projects_router.put('/update_project/{project_id}', tags=['projects'])
+def update_project_status(project_id: int, project: ProjectUpdate, db: Session = Depends(get_db), api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Update project status
+    """
+    project = crud.projects.update_project(project_id, project, db)
+    return responses.PROJECT_UPDATED_SUCCESS
+
 @projects_router.put('/update_project_status/{project_id}/{status}', tags=['projects'])
 def update_project_status(project_id: int, status: str, db: Session = Depends(get_db), 
                           api_key: APIKey = Depends(auth.get_api_key)):

@@ -10,6 +10,7 @@ from datetime import datetime
 from db.enums import ProjectStatusEnum, RoleEnum
 from sqlalchemy import func
 import crud.users_crud as users_crud
+from schemas.other_schemas import ProjectUpdate
 
 
 
@@ -97,6 +98,48 @@ def create_projects_from_list(projects: List[Project], db: Session):
     return response
 
 # --------------------------------------------- UPDATE ------------------------------------------------------------
+def update_project(project_id: int, project: ProjectUpdate, db: Session):
+    """
+    Actualizar un proyecto 
+    """
+    db_project = db.query(models.Project).filter(models.Project.id == project_id).first()
+    if db_project is None:
+        raise HTTPException(status_code=400, detail=messages['project_not_exists'])
+
+    # cambiar descripcion del proyecto
+    if project.description != None and project.description != db_project.description:
+        db_project.description = project.description
+    
+    # cambiar fecha de culminacion del proyecto
+    if project.date_end != None and project.date_end != db_project.date_end:
+        db_project.date_end = project.date_end
+
+    # cambiar status del proyecto
+    if project.status != None and project.status != db_project.status:
+        db_project.status = project.status
+
+    # ultima actualizacion
+    db_project.updated_at = datetime.now()
+    
+    print("#"*50)
+    print("Llego6")
+    print(db_project)
+    print(db_project.name)
+    print(db_project.description)
+    print(db_project.date_end)
+    print(db_project.status)
+    print("#"*50)
+    try:
+        db.add(db_project)
+        db.commit()        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=messages['internal_error'])
+    print("#"*50)
+    print("Llego7")
+    print("#"*50)
+    return project
+
 def update_project_status(project_id: int, status: str, db: Session):
     """
     Actualizar el status de un proyecto 

@@ -29,3 +29,13 @@ class UserUpdate(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ProjectUpdate(BaseModel):
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    date_end: Optional[datetime] = None
+    status: Optional[str] = None
+
+    class Config:
+        orm_mode = True
