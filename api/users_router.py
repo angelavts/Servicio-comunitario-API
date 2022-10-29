@@ -40,11 +40,11 @@ def get_project_info_by_student(identification: UserIdentification, db: Session 
     Obtiene información del proyecto donde está inscrito un estudiante
     """
     project_info = crud.users.get_project_info_by_student(identification.identification, db)
-    if project_info == None:
-        project_info = {}
+    if project_info['name'] is None:
+        project_info['task_list'] = []
     else:
-        project_info = dict(project_info)
         project_info['task_list'] = crud.tasks.get_tasks_by_student(identification.identification, db)
+    
     return project_info
     
 
@@ -54,6 +54,8 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
     Obtiene los datos de un usuario a partir de la cédula
     """
     user = crud.users.get_user_info_by_identification(identification.identification, db)
+
+    db.close()
     return user
 
 @users_router.post('/enroll_students_in_project/{project_id}', tags=['users'])
