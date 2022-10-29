@@ -625,22 +625,42 @@ def get_tutors(db: Session):
 
 
 def get_project_info_by_student(identification: str, db: Session):
-    """5
+    """
         Busca información del proyecto donde se encuentra inscrito un estudiante    
     """
+    # buscar al usuario
+    db_user = get_user_by_identification(identification, db)
+
+    if db_user is None:
+        raise HTTPException(status_code=400, detail=messages['user_not_exists'])
+
     coordinator = aliased(models.User, name='coordinator')
     project_info = (db.query(
                     models.Project.id,
                     models.Project.name,
                     models.Project.description, 
                     models.Project.date_start, 
+                    coordinator.identification,
                     coordinator.fullname.label('coordinator'))                
                 .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
                 .join(models.User, models.User.id == models.ProjectStudent.student_id)
                 .filter(models.User.identification == identification)
                 .filter(models.ProjectStudent.active)
                 .join(coordinator, coordinator.id == models.Project.coordinator_id)
-                .first())    
+                .first())
+    if project_info is None:
+        project_info = {
+            'id': None,
+            'name': None, 
+            'description': None, 
+            'date_start': None,
+            'identification': None,
+            'coordinator': None
+            
+        }
+    else:
+        project_info = dict(project_info)
+    project_info['hours'] = db_user.total_hours    
     return project_info
 
 
