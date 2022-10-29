@@ -121,23 +121,12 @@ def update_project(project_id: int, project: ProjectUpdate, db: Session):
     # ultima actualizacion
     db_project.updated_at = datetime.now()
     
-    print("#"*50)
-    print("Llego6")
-    print(db_project)
-    print(db_project.name)
-    print(db_project.description)
-    print(db_project.date_end)
-    print(db_project.status)
-    print("#"*50)
     try:
         db.add(db_project)
         db.commit()        
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=messages['internal_error'])
-    print("#"*50)
-    print("Llego7")
-    print("#"*50)
     return project
 
 def update_project_status(project_id: int, status: str, db: Session):
