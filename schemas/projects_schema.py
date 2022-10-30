@@ -6,7 +6,7 @@ from datetime import datetime
 class Project(BaseModel):
     name: str 
     description: str 
-    date_start: datetime 
+    date_start: str 
     career: str
     coordinator_identification: str     
     coordinator_first_name: str 

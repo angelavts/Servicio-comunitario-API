@@ -45,6 +45,11 @@ def create_new_coordinator(project: Project, db: Session):
         ) 
     return users_crud.create_user(new_user, RoleEnum.Coordinator, db)
 
+def convert_date(date: str):
+    """
+    Convierte una fecha en formato dd/mm/aaaa a datetime
+    """
+    return datetime.strptime(date, '%d/%m/%Y')
 # --------------------------------------------- POST ------------------------------------------------------------
 def create(project: Project, db: Session):
     """
@@ -68,7 +73,7 @@ def create(project: Project, db: Session):
     new_project = models.Project(
         name=project.name,
         description=project.description,
-        date_start=project.date_start,
+        date_start=convert_date(project.date_start),
         coordinator_id = coordinator.id,
         career_id = career.id,
     ) 
