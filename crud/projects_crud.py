@@ -8,7 +8,7 @@ from core.messages import messages
 from core.config import settings
 from datetime import datetime
 from db.enums import ProjectStatusEnum, RoleEnum
-from sqlalchemy import func
+from sqlalchemy import func, case
 import crud.users_crud as users_crud
 from schemas.other_schemas import ProjectUpdate
 
@@ -291,11 +291,12 @@ def get_active_projects(db: Session):
                          models.Project.description, 
                          models.Project.date_start,
                          models.Project.status,
-                        func.count( models.ProjectStudent.student_id).label('student_count'))
-                         .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
-                         .filter(models.Project.status == ProjectStatusEnum.Active and models.ProjectStudent.active == True)
+                         func.count(case([(models.ProjectStudent.active == True, 1)])).label('student_count'))
+                         .outerjoin(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
+                         .filter(models.Project.status == ProjectStatusEnum.Active)
                          .group_by(models.Project.id)              
                 ).all()
+
     return projects
 
 def get_all_projects(db: Session, status: str=None):

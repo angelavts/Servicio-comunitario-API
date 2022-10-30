@@ -249,7 +249,7 @@ def update_project(user: models.User, db_project: models.Project, db: Session):
     
     # buscar la relación del proyecto que se quiere crear
     filters = [models.ProjectStudent.project_id == db_project.id, 
-               models.ProjectStudent.student_id == user.id, models.ProjectStudent.active == True]
+               models.ProjectStudent.student_id == user.id]
     db_project_new = db.query(models.ProjectStudent).filter(*filters).first()
 
     if db_project_new is not None:
@@ -363,6 +363,31 @@ def delete_student_project(identification: str, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return db_user
 
+
+def delete_students_project(id_list: list, db: Session):
+    """
+        Sacar de un proyecto a varios estudiantes 
+    """
+    successful = []
+    failed = []
+    for id_student in id_list:
+        db_student = db.query(models.User).filter(models.User.id == id_student).first()
+        if db_student != None:
+            # eliminar al estudiante de su proyecto activo
+            try:
+                delete_student_project(db_student.identification, db)
+                successful.append(id_student)
+            except Exception as e:
+                print(e)
+                failed.append(id_student)
+                db.rollback()
+        else:
+            failed.append(id_student)
+    
+    response = {}
+    response['successful'] = successful
+    response['failed'] = failed        
+    return response
 
 def update_students_status(id_list: list, status: str, db: Session):
     """
@@ -640,7 +665,7 @@ def get_project_info_by_student(identification: str, db: Session):
                     models.Project.name,
                     models.Project.description, 
                     models.Project.date_start, 
-                    coordinator.identification,
+                    coordinator.identification.label('identification_coordinator'),
                     coordinator.fullname.label('coordinator'))                
                 .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
                 .join(models.User, models.User.id == models.ProjectStudent.student_id)

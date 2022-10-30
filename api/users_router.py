@@ -174,8 +174,18 @@ def delete_student_project(identification: UserIdentification, db: Session = Dep
     """
     Saca al estudiante del proyecto actual
     """
-    users = crud.users.delete_student_project(identification.identification, db)
+    response = crud.users.delete_student_project(identification.identification, db)
     return responses.USER_UPDATED_SUCCESS
+
+
+@users_router.put('/delete_students_project', tags=['users'])
+def delete_students_project(id_list: IdList, db: Session = Depends(get_db), 
+                          api_key: APIKey = Depends(auth.get_api_key)):
+    """
+    Saca al estudiante del proyecto actual
+    """
+    response = crud.users.delete_students_project(id_list.id_list, db)
+    return response
 
 
 @users_router.put('/update_student_status/{status}', tags=['users'])
