@@ -16,7 +16,6 @@ def create_user(user: User, role: str, token: str):
             "role": role
         }
     # definir header para el request
-    print("TOKEN -------> " + token)
     headers = {
         'Authorization': 'Bearer ' + token
     } 
@@ -36,7 +35,6 @@ def update_user(user: User, token: str):
             "email": user.email            
         }
     # definir header para el request
-    print("TOKEN -------> " + token)
     headers = {
         'Authorization': token
     } 
@@ -56,7 +54,6 @@ def create_users(users: List[User], role: str, token: str):
     users_list = []
     # armar la estructura json para registrar usuarios
     # en el servicio de autenticación
-    print("TOKEN -------> " + token)
     for user in users:
         new_user = {
                 "first_name": user.first_name,

@@ -44,7 +44,7 @@ def get_project_info_by_student(identification: UserIdentification, db: Session 
         project_info['task_list'] = []
     else:
         project_info['task_list'] = crud.tasks.get_tasks_by_student(identification.identification, db)
-    
+    db.close()
     return project_info
     
 
@@ -54,7 +54,6 @@ def get_user(identification: UserIdentification, db: Session = Depends(get_db)):
     Obtiene los datos de un usuario a partir de la cédula
     """
     user = crud.users.get_user_info_by_identification(identification.identification, db)
-
     db.close()
     return user
 
@@ -65,6 +64,7 @@ def enroll_students_in_project(id_students: List[int], project_id: int, db: Sess
     Inscribe a los estudiantes seleccionados en un proyecto a partir de una lista de ids
     """
     user = crud.users.enroll_students_in_project(id_students, project_id, db)
+    db.close()
     return user
 
 
@@ -75,6 +75,7 @@ def create_student(user: User, request: Request, db: Session = Depends(get_db), 
     """
     authorization = request.headers.get(auth_key)
     response = crud.users.create_user_with_username(user, RoleEnum.Student, db, authorization)
+    db.close()
     return response
 
 
@@ -86,6 +87,7 @@ def create_students(users: List[User], request: Request, db: Session = Depends(g
     """
     authorization = request.headers.get(auth_key)
     response = crud.users.create_users_with_username(users, RoleEnum.Student, db, authorization)
+    db.close()
     return response
 
 
@@ -96,6 +98,7 @@ def create_tutor(user: User, request: Request, db: Session = Depends(get_db), ap
     """
     authorization = request.headers.get(auth_key)
     response = crud.users.create_user_with_username(user, RoleEnum.Tutor, db, authorization)
+    db.close()
     return response
 
 
@@ -107,6 +110,7 @@ def create_tutors(users: List[User], request: Request, db: Session = Depends(get
     """
     authorization = request.headers.get(auth_key)
     response = crud.users.create_users_with_username(users, RoleEnum.Tutor, db, authorization)
+    db.close()
     return response
 
 @users_router.post('/create_students_from_file', tags=['users'])
@@ -128,6 +132,7 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
 
     schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, settings.USERS_FILE_FORMAT)
     response = crud.users.create_users_from_list(schema_list, 'Estudiante', db)
+    db.close()
     return response
 
 
@@ -151,6 +156,7 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
 
     schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, settings.USERS_FILE_FORMAT)
     response = crud.users.create_users_from_list(schema_list, 'Tutor', db)
+    db.close()
     return response
 
 
@@ -165,6 +171,7 @@ def update_user(user: UserUpdate, db: Session = Depends(get_db),
     print('update_user')
     print(authorization)
     users = crud.users.update_user(user, authorization, db)
+    db.close()
     return responses.USER_UPDATED_SUCCESS
 
 
@@ -175,6 +182,7 @@ def delete_student_project(identification: UserIdentification, db: Session = Dep
     Saca al estudiante del proyecto actual
     """
     response = crud.users.delete_student_project(identification.identification, db)
+    db.close()
     return responses.USER_UPDATED_SUCCESS
 
 
@@ -185,6 +193,7 @@ def delete_students_project(id_list: IdList, db: Session = Depends(get_db),
     Saca al estudiante del proyecto actual
     """
     response = crud.users.delete_students_project(id_list.id_list, db)
+    db.close()
     return response
 
 
@@ -195,6 +204,7 @@ def update_student_status(identification: UserIdentification, status: UserStatus
     Actualiza el estatus de un estudiante
     """
     users = crud.users.update_student_status(identification.identification, status, db)
+    db.close()
     return responses.USER_UPDATED_SUCCESS
 
 
@@ -205,6 +215,7 @@ def update_students_status(id_list: IdList, status: UserStatusEnum, db: Session 
     
     """
     response = crud.users.update_students_status(id_list.id_list, status, db)
+    db.close()
     return response
 
 # ------------------------------ GET ------------------------------------------------
@@ -228,6 +239,7 @@ def get_students(status: Optional[str] = None, db: Session = Depends(get_db)):
         users = crud.users.get_students_by_status(db, status)
     else:
         raise HTTPException(status_code=400, detail=messages['incorrect_status'])
+    db.close()
     return users
 
 
@@ -240,6 +252,7 @@ def get_students_without_project(db: Session = Depends(get_db)):
     no tienen proyecto asignado
     """
     users = crud.users.get_students_without_project(db)
+    db.close()
     return users
 
 
@@ -252,6 +265,7 @@ def get_tutors(db: Session = Depends(get_db)):
     Obtiene la lista de tutores
     """
     users = crud.users.get_tutors(db)
+    db.close()
     return users
 
 

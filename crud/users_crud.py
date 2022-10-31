@@ -41,7 +41,7 @@ def create_user_with_username(user: User, role: str, db: Session, token: str):
     # dar formato a la cédula obtenida
     user.identification = utils.format_identication(user.identification)
     # registrar el usuario en el servicio de autenticación
-    response = requests.create_user(user, RoleEnum.Student, token)
+    response = requests.create_user(user, role, token)
     username = None
     # tratar de obtener el username 
     try:
@@ -666,7 +666,8 @@ def get_project_info_by_student(identification: str, db: Session):
                     models.Project.description, 
                     models.Project.date_start, 
                     coordinator.identification.label('identification_coordinator'),
-                    coordinator.fullname.label('coordinator'))                
+                    coordinator.fullname.label('coordinator'),
+                    models.User.status)                
                 .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
                 .join(models.User, models.User.id == models.ProjectStudent.student_id)
                 .filter(models.User.identification == identification)

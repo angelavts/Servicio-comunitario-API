@@ -29,6 +29,7 @@ def create_task(task: Task, db: Session = Depends(get_db)):
     create a task
     """
     task = crud.tasks.create(task, db)
+    db.close()
     return responses.TASK_CREATED_SUCCESS
 
 @tasks_router.post('/get_student_tasks', tags=['tasks'])
@@ -37,6 +38,7 @@ def get_student_tasks(student_identification: UserIdentification, db: Session = 
     Obtener la lista de tareas de un estudiante en un proyecto especifico
     """
     tasks = crud.tasks.get_tasks_by_student(student_identification.identification, db)
+    db.close()
     return tasks
 
 
@@ -46,6 +48,7 @@ def get_tutor_tasks(tutor_identification: UserIdentification, db: Session = Depe
     Obtener la lista de tareas de las cuales se es tutor
     """
     tasks = crud.tasks.get_tasks_by_tutor(tutor_identification.identification, db)
+    db.close()
     return tasks
 
 # ---------------------------------------- UPDATE ----------------------------------------------
@@ -56,6 +59,7 @@ def update_task_status(task_id: int, status: TaskStatusEnum, db: Session = Depen
     Update task status
     """
     tasks = crud.tasks.update_task_status(task_id, status, db)
+    db.close()
     return responses.TASK_UPDATED_SUCCESS
 
 
@@ -70,6 +74,7 @@ def get_project_tasks(project_id: int, db: Session = Depends(get_db)):
     Obtener la lista de tareas de un estudiante en un proyecto especifico
     """
     tasks = crud.tasks.get_tasks_by_project(project_id, db)
+    db.close()
     return tasks
 
 

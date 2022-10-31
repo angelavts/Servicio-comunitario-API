@@ -28,6 +28,7 @@ def create_project(project: Project, db: Session = Depends(get_db), api_key: API
     create a project
     """
     project = crud.projects.create(project, db)
+    db.close()
     return responses.PROJECT_CREATED_SUCCESS
 
 # actualizar proyectos
@@ -37,6 +38,7 @@ def update_project_status(project_id: int, project: ProjectUpdate, db: Session =
     Update project status
     """
     project = crud.projects.update_project(project_id, project, db)
+    db.close()
     return responses.PROJECT_UPDATED_SUCCESS
 
 @projects_router.put('/update_project_status/{project_id}/{status}', tags=['projects'])
@@ -46,6 +48,7 @@ def update_project_status(project_id: int, status: str, db: Session = Depends(ge
     Update project status
     """
     project = crud.projects.update_project_status(project_id, status, db)
+    db.close()
     return responses.PROJECT_UPDATED_SUCCESS
 
 @projects_router.put('/update_project_date_end/{project_id}/{date}', tags=['projects'])
@@ -55,6 +58,7 @@ def update_project_date_end(project_id: int, date: datetime, db: Session = Depen
     Update project status
     """
     project = crud.projects.update_project_date_end(project_id, date, db)
+    db.close()
     return responses.PROJECT_UPDATED_SUCCESS
 
 # obtener proyectos
@@ -64,6 +68,7 @@ def get_projects_by_status(status: ProjectStatusEnum, db: Session = Depends(get_
     get project list by status
     """
     projects = crud.projects.get_projects_by_status(status, db)
+    db.close()
     return projects
 
 @projects_router.get('/get_projects_by_coordinator_status/{status}/{coordinator}', tags=['projects'])
@@ -72,6 +77,7 @@ def get_projects_by_coordinator_status(coordinator_id: int, status: ProjectStatu
     get project list by coordinator and status
     """
     projects = crud.projects.get_projects_by_coordinator_status(coordinator_id, status, db)
+    db.close()
     return projects
 
 @projects_router.get('/get_projects_by_career_status/{status}/{career}', tags=['projects'])
@@ -80,6 +86,7 @@ def get_projects_by_career_status(career: int, status: ProjectStatusEnum, db: Se
     get project list by career and status
     """
     projects = crud.projects.get_projects_by_career_status(career, status, db)
+    db.close()
     return projects
 
 @projects_router.get('/get_project/{project_id}', tags=['projects'])
@@ -88,6 +95,7 @@ def get_project(project_id: int, db: Session = Depends(get_db)):
     get a project
     """
     project = crud.projects.get_project(project_id, db)
+    db.close()
     return project
 
 
@@ -97,6 +105,7 @@ def get_active_project_by_student_id(student_id: int, db: Session = Depends(get_
     Obtener el proyecto activo de un estudiante a partir de un id
     """
     project = crud.projects.get_active_project_by_student_id(student_id, db)
+    db.close()
     return project
 
 @projects_router.get('/get_students/{project_id}', tags=['projects'])
@@ -105,6 +114,7 @@ def get_students(project_id: int, db: Session = Depends(get_db)):
     Obtiene la lista de estudiantes actualmente inscritos en un proyecto
     """
     project = crud.projects.get_students(project_id, db)
+    db.close()
     return project
 
 
@@ -115,6 +125,7 @@ def get_students_to_approval(project_id: int, db: Session = Depends(get_db)):
     tienen más de 120 horas
     """
     project = crud.projects.get_students(project_id, db, to_approve=True)
+    db.close()
     return project
 
 @projects_router.get('/get_active_projects', tags=['projects'])
@@ -123,6 +134,7 @@ def get_active_projects(db: Session = Depends(get_db)):
     get a list of active projects
     """
     projects = crud.projects.get_active_projects(db)
+    db.close()
     return projects
 
 @projects_router.get('/get_all_projects')
@@ -132,6 +144,7 @@ def get_all_projects(status: Optional[ProjectStatusEnum] = None, db: Session = D
     Obtiene una lista de proyectos
     """
     projects = crud.projects.get_all_projects(db, status)
+    db.close()
     return projects
 
 
@@ -151,6 +164,7 @@ async def upload_file(file: UploadFile=File(...), db: Session = Depends(get_db)
         myfile.close()
     schema_list = utils.get_schema_list_from_file(upload_path, row_to_schema, settings.PROJECTS_FILE_FORMAT)
     response = crud.projects.create_projects_from_list(schema_list, db)
+    db.close()
     return response
 
 @projects_router.post('/create_projects', tags=['projects'])
@@ -159,4 +173,5 @@ def create_projects(projects: List[Project], db: Session = Depends(get_db), api_
     Crear proyectos a partir de una lista
     """
     response = crud.projects.create_projects_from_list(projects, db)
+    db.close()
     return response
