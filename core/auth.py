@@ -4,8 +4,13 @@ from starlette.status import HTTP_403_FORBIDDEN
 from core.config import settings
 
 
-api_key_header = APIKeyHeader(name="access_token", auto_error=False)
+api_key_header = APIKeyHeader(name="access-token", auto_error=False)
 
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
-    return api_key_header   
+    if api_key_header in settings.API_KEYS:
+        return api_key_header   
+    else:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN, detail="Could not validate API KEY"
+        )

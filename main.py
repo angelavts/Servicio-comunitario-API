@@ -1,6 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI
 from db.session import engine, Base 
 from core.config import settings
 from api.tasks_router import tasks_router
@@ -10,7 +9,7 @@ from api.projects_router import projects_router
 from fastapi.middleware.cors import CORSMiddleware
 from db.populate_db import populate_static_db
 from db.test_data import populate_db
-from starlette.status import HTTP_403_FORBIDDEN
+
 
 
 
@@ -49,20 +48,6 @@ def start_application():
 
 
 app = start_application()
-
-
-@app.middleware("http")
-async def create_auth_header(request: Request, call_next):
-    api_key = request.headers.get('access_token')
-
-    if api_key != None and api_key in settings.API_KEYS:
-        pass 
-    else:
-        return JSONResponse(status_code=HTTP_403_FORBIDDEN, content={"detail": "Could not validate API KEY!"})
-    response = await call_next(request)
-    return response
-
-
 def start_server():
     
     uvicorn.run(
