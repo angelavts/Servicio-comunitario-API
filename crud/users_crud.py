@@ -666,8 +666,7 @@ def get_project_info_by_student(identification: str, db: Session):
                     models.Project.description, 
                     models.Project.date_start, 
                     coordinator.identification.label('identification_coordinator'),
-                    coordinator.fullname.label('coordinator'),
-                    models.User.status)                
+                    coordinator.fullname.label('coordinator'))                
                 .join(models.ProjectStudent, models.Project.id == models.ProjectStudent.project_id)
                 .join(models.User, models.User.id == models.ProjectStudent.student_id)
                 .filter(models.User.identification == identification)
@@ -681,12 +680,12 @@ def get_project_info_by_student(identification: str, db: Session):
             'description': None, 
             'date_start': None,
             'identification': None,
-            'coordinator': None
-            
+            'coordinator': None       
         }
     else:
         project_info = dict(project_info)
     project_info['hours'] = db_user.total_hours    
+    project_info['status'] = str(db_user.status)
     return project_info
 
 
