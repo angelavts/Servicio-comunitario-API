@@ -58,7 +58,7 @@ async def create_auth_header(request: Request, call_next):
     if api_key != None and api_key in settings.API_KEYS:
         pass 
     else:
-        return JSONResponse(status_code=HTTP_403_FORBIDDEN, content={"detail": "Could not validate API KEY"})
+        return JSONResponse(status_code=HTTP_403_FORBIDDEN, content={"detail": "Could not validate API KEY!"})
     response = await call_next(request)
     return response
 
