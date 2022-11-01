@@ -8,6 +8,9 @@ api_key_header = APIKeyHeader(name="access_token", auto_error=False)
 
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
+    print("API KEYS")
+    print(settings.API_KEYS)
+    print(api_key_header)
     if api_key_header in settings.API_KEYS:
         return api_key_header   
     else:
