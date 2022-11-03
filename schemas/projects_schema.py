@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 # crear un proyecto
@@ -11,9 +11,9 @@ class Project(BaseModel):
     coordinator_identification: str     
     coordinator_first_name: str 
     coordinator_last_name: str
-    coordinator_career: str 
-    coordinator_email: str
-    coordinator_phone: str
+    coordinator_career: Optional[str] = None 
+    coordinator_email: Optional[str] = None
+    coordinator_phone: Optional[str] = None
 
     class Config:
         orm_mode = True

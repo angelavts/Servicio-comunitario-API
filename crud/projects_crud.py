@@ -1,4 +1,5 @@
 from db import db_models as models
+from db.enums import RoleEnum, UserStatusEnum
 from schemas.projects_schema import Project
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
@@ -43,7 +44,7 @@ def create_new_coordinator(project: Project, db: Session):
             email = project.coordinator_email,
             phone = project.coordinator_phone
         ) 
-    return users_crud.create_user(new_user, RoleEnum.Coordinator, db)
+    return users_crud.create_user(new_user, RoleEnum.Community, db)
 
 def convert_date(date: str):
     """

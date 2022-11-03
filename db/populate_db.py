@@ -1,12 +1,34 @@
+import crud.users_crud as users_crud
 from db import db_models as models 
 from sqlalchemy.orm import Session
 from db.db import get_db
-
+from db.enums import RoleEnum
+from schemas.users_schema import User
 
 def populate_static_db():
     create_institutions(get_db())
     create_faculties(get_db())
     create_careers(get_db())
+    create_admin_user(get_db())
+
+def create_admin_user(db: Session):
+    try:
+        admin = models.User(
+            identification='V-12344321',
+            first_name='Mirella',
+            last_name='Herrera',
+            career_id = 1,
+            email = 'mirellaherrera@gmail.com',
+            phone = None,
+            role = RoleEnum.Coordinator
+        )
+        db.add(admin)
+        db.commit() 
+    except Exception as e:
+        print(e)
+        db.rollback()
+    db.close()
+
 
 def create_institutions(db: Session):
     institutions = []
@@ -15,8 +37,6 @@ def create_institutions(db: Session):
             name='Universidad de Carabobo'
         )  
     )
-    
-
     try:
         for institution in institutions:
             db.add(institution)
@@ -24,6 +44,7 @@ def create_institutions(db: Session):
     except Exception as e:
         print(e)
         db.rollback()
+    db.close()
 
 def create_faculties(db: Session):
     faculties = []
@@ -41,6 +62,7 @@ def create_faculties(db: Session):
     except Exception as e:
         print(e)
         db.rollback()
+    db.close()
 
 
 def create_careers(db: Session):
@@ -82,4 +104,5 @@ def create_careers(db: Session):
     except Exception as e:
         print(e)
         db.rollback()
+    db.close()
     

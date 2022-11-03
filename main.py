@@ -23,7 +23,7 @@ def create_and_populate_db():
     # crear bases de datos y llenarla con datos iniciales
     create_tables()
     populate_static_db()
-    populate_db()
+    # populate_db()
     # create_tasks()
 
 def start_application():
