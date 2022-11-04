@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from db.db import get_db
 from db.enums import RoleEnum
 from schemas.users_schema import User
+import os
 
 def populate_static_db():
     create_institutions(get_db())
@@ -14,12 +15,12 @@ def populate_static_db():
 def create_admin_user(db: Session):
     try:
         admin = models.User(
-            identification='V-12344321',
-            first_name='Mirella',
-            last_name='Herrera',
-            career_id = 1,
-            email = 'mirellaherrera@gmail.com',
-            phone = None,
+            identification= str(os.getenv('ADMIN_IDENTIFICATION')),
+            first_name=str(os.getenv('ADMIN_FIRSTNAME')),
+            last_name=str(os.getenv('ADMIN_LASTNAME')),
+            career_id = int(os.getenv('ADMIN_CAREER')),
+            email = str(os.getenv('ADMIN_EMAIL')),
+            phone = str(os.getenv('ADMIN_PHONE')),
             role = RoleEnum.Coordinator
         )
         db.add(admin)

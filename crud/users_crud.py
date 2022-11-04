@@ -155,6 +155,9 @@ def create_users_with_username(users: List[User], role: str, db: Session, token:
 # ------------------------------------------ UPDATE ------------------------------------
 
 def update_hours(user_id: int, hours: int, db: Session):
+    """
+        Actualiza las horas de un estudiante
+    """
     # buscar estudiante en la bd
     db_user = get_user_by_id(user_id, db)
     # sumar las horas
@@ -173,7 +176,7 @@ def update_hours(user_id: int, hours: int, db: Session):
 
 def update_user(user: UserUpdate, token: str, db: Session):
     """
-    Crea un usuario 
+    Actualiza los datos de un usuario 
     """
     # buscar el usuario por cédula
     db_user = get_user_by_identification(user.identification, db)
@@ -231,7 +234,6 @@ def update_project(user: models.User, db_project: models.Project, db: Session):
     """
     Actualiza el proyecto de un estudiante
     """
-
     # buscar el proyecto que tiene activo actualmente 
     filters = [models.ProjectStudent.student_id == user.id, models.ProjectStudent.active == True]
     db_project_active = db.query(models.ProjectStudent).filter(*filters).first()
@@ -436,7 +438,7 @@ def is_user_in_db(identification: str, db: Session):
 
 def get_user_by_identification(identification: str, db: Session):
     """
-    Busca un usuario la base de datos
+    Busca un usuario la base de datos por su cédula
     """
     # buscar el id del usuario
     db_user =  db.query(models.User).filter(models.User.identification == identification).first()
@@ -444,7 +446,7 @@ def get_user_by_identification(identification: str, db: Session):
 
 def get_user_by_id(user_id: int, db: Session):
     """
-    Busca un usuario la base de datos
+    Busca un usuario la base de datos por su id
     """
     # buscar el id del usuario
     db_user =  db.query(models.User).filter(models.User.id == user_id).first()

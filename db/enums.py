@@ -30,8 +30,9 @@ class UserStatusEnum(str, Enum):
     Active = 'Activo'
     Inactive = 'Inactivo'
     Approved = 'Aprobado'
+    Graduated = 'Graduado'
 
-user_status_enum = ('Activo', 'Inactivo', 'Aprobado')
+user_status_enum = ('Activo', 'Inactivo', 'Aprobado', 'Graduado')
 user_status_enum = ENUM(*user_status_enum, name='user_status_enum')
 
 # Project status enum

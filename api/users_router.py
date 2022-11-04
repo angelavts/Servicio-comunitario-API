@@ -235,7 +235,7 @@ def get_students(status: Optional[str] = None, db: Session = Depends(get_db)):
         users = crud.users.get_students_with_project(db)
     elif status == 'Aprobado':
         users = crud.users.get_approved_students(db)
-    elif status == 'Activo' or status == 'Inactivo':
+    elif status == 'Activo' or status == 'Inactivo' or status == 'Graduado':
         users = crud.users.get_students_by_status(db, status)
     else:
         raise HTTPException(status_code=400, detail=messages['incorrect_status'])
