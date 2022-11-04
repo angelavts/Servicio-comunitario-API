@@ -168,8 +168,6 @@ def update_user(user: UserUpdate, db: Session = Depends(get_db),
     """
     Actualiza los datos de un usuario 
     """
-    print('update_user')
-    print(authorization)
     users = crud.users.update_user(user, authorization, db)
     db.close()
     return responses.USER_UPDATED_SUCCESS

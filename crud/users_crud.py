@@ -60,7 +60,6 @@ def create_user_with_username(user: User, role: str, db: Session, token: str):
             "username": username
         }
     else:      
-        print(response) 
         message = "" 
         try:
             # no existe username, significa que hay un error en autenticación
@@ -108,7 +107,6 @@ def create_users_with_username(users: List[User], role: str, db: Session, token:
     try:
         auth_list = response['users']
     except Exception as e:
-        print("Error creating users")
         print(e)
         # si no se tiene la lista de usuarios es porque no se registró ninguno
         response = {
@@ -189,7 +187,6 @@ def update_user(user: UserUpdate, token: str, db: Session):
     if user.email != None and user.email != db_user.email:
         db_user.email = user.email
         response = requests.update_user(user, token)
-        print(response)
         is_modified_in_auth_service = response["ok"]
     
     if is_modified_in_auth_service:
@@ -513,7 +510,6 @@ def get_approved_students(db: Session):
     Cédula, nombre, apellido, horas, estatus, proyecto, fecha de aprobación
     """
     filters = [models.User.role == RoleEnum.Student, models.User.status == UserStatusEnum.Approved]
-    print("get approved students")
     projects_alias = aliased(models.Project, name='project')
     career_alias = aliased(models.Career, name='career')
     db_students = (db.query(

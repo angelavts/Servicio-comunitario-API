@@ -50,7 +50,6 @@ def update_user(user: User, token: str):
 
 
 def create_users(users: List[User], role: str, token: str):
-    print("Create users")
     users_list = []
     # armar la estructura json para registrar usuarios
     # en el servicio de autenticación
@@ -67,9 +66,6 @@ def create_users(users: List[User], role: str, token: str):
     users_json = {
         "users": users_list
     }
-
-    print("USERS JSON")
-    print(users_json)
     # definir header para el request
     headers = {
         'Authorization': token
@@ -80,7 +76,6 @@ def create_users(users: List[User], role: str, token: str):
     try:
         response = response.json()
     except Exception as e:
-        print("errorrrrrrrrrrrrrrrrrr")
         print(e)
         response = {'status_code': response.status_code}
     return response
