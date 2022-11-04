@@ -124,12 +124,11 @@ def update_project(project_id: int, project: ProjectUpdate, db: Session):
     if project.status != None and project.status != db_project.status:
         db_project.status = project.status
         if project.status == 'Inactivo':
-            user_list = []
             query_resul = db.query(models.ProjectStudent.student_id).filter(models.ProjectStudent.project_id == project_id).filter(models.ProjectStudent.active == True).all()
             if query_resul:
                 user_list = [x[0] for x in query_resul]
-            if len(user_list) > 0:
-                users_crud.delete_students_project(user_list, db)
+                if len(user_list) > 0:
+                    users_crud.delete_students_project(user_list, db)
 
     # ultima actualizacion
     db_project.updated_at = datetime.now()
