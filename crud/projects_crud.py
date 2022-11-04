@@ -1,5 +1,4 @@
 from db import db_models as models
-from db.enums import RoleEnum, UserStatusEnum
 from schemas.projects_schema import Project
 from schemas.users_schema import User
 from sqlalchemy.orm import Session
@@ -8,7 +7,7 @@ from typing import List
 from core.messages import messages
 from core.config import settings
 from datetime import datetime
-from db.enums import ProjectStatusEnum, RoleEnum
+from db.enums import ProjectStatusEnum, RoleEnum, UserStatusEnum
 from sqlalchemy import func, case
 import crud.users_crud as users_crud
 from schemas.other_schemas import ProjectUpdate
@@ -123,12 +122,7 @@ def update_project(project_id: int, project: ProjectUpdate, db: Session):
     # cambiar status del proyecto
     if project.status != None and project.status != db_project.status:
         db_project.status = project.status
-        if project.status == 'Inactivo':
-            query_resul = db.query(models.ProjectStudent.student_id).filter(models.ProjectStudent.project_id == project_id).filter(models.ProjectStudent.active == True).all()
-            if query_resul:
-                user_list = [x[0] for x in query_resul]
-                if len(user_list) > 0:
-                    users_crud.delete_students_project(user_list, db)
+        delete_project_students(db_project, db)
 
     # ultima actualizacion
     db_project.updated_at = datetime.now()
@@ -141,6 +135,19 @@ def update_project(project_id: int, project: ProjectUpdate, db: Session):
         raise HTTPException(status_code=500, detail=messages['internal_error'])
     return project
 
+
+
+def delete_project_students(project: models.Project, db: Session):
+    if project.status == ProjectStatusEnum.Inactive:
+            query_resul = (db.query(models.ProjectStudent.student_id)
+                            .filter(models.ProjectStudent.project_id == project.id)
+                            .filter(models.ProjectStudent.active == True).all())
+            if query_resul:
+                user_list = [x[0] for x in query_resul]
+                if len(user_list) > 0:
+                    users_crud.delete_students_project(user_list, db)
+
+
 def update_project_status(project_id: int, status: str, db: Session):
     """
     Actualizar el status de un proyecto 
@@ -151,6 +158,7 @@ def update_project_status(project_id: int, status: str, db: Session):
 
     # cambiar status del proyecto
     project.status = status
+    delete_project_students(project, db)
 
     # ultima actualizacion
     project.updated_at = datetime.now()

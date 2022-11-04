@@ -169,6 +169,7 @@ def get_tasks_by_project(project_id: int, db: Session):
                     .filter(user_alias.status == UserStatusEnum.Active)
                     .join(models.ProjectStudent, user_alias.id == models.ProjectStudent.student_id)
                     .filter(models.ProjectStudent.active)   
+                    .filter(models.ProjectStudent.project_id == project_id)  
                     .outerjoin(tutor_alias, tutor_alias.id == models.Task.tutor_id)                 
                     .all())
     return db_tasks
